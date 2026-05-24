@@ -1,22 +1,20 @@
 export type GamePhase =
   | 'LANDING'
-  | 'TEAM_SELECT'          // выбор команды
+  | 'TEAM_SELECT'
   | 'SETUP'
-  | 'ENEMY_CRY'
-  | 'ENEMY_CHOOSES'
-  | 'PLAYER_RUNS'          // наш ход: жмём ПРОБЕЛ для атаки
-  | 'BREAKTHROUGH_ANIM'
-  | 'RESULT'
-  | 'COMMENTARY'
-  | 'PLAYER_CHOOSES'
-  | 'ENEMY_RUNS'           // ход врага: жмём ПРОБЕЛ для защиты
+  | 'PLAYER_CHOOSES'      // игрок выбирает runner + gap
+  | 'PLAYER_RUNS'         // timing bar: ATTACK
+  | 'BOT_CHOOSING'        // бот выбирает (автo 1.5s)
+  | 'ENEMY_RUNS'          // timing bar: DEFENSE
+  | 'BREAKTHROUGH_ANIM'   // анимация прорыва/отскока
+  | 'RESULT'              // показ результата
   | 'GAME_OVER'
 
 export interface Player {
   id: string
   name: string
-  kush: number        // Күш: сила прорыва (1-10)
-  karsylyk: number    // Қарсылық: сопротивление (1-10)
+  kush: number        // ⚡ сила атаки
+  karsylyk: number    // 🛡 сила защиты
   description: string
   isCaptain: boolean
   team: 'blue' | 'red'
@@ -30,7 +28,7 @@ export interface Team {
 }
 
 export interface BreakthroughResult {
-  success: boolean
+  success: boolean   // attack: прорыв удался | defense: цепь устояла
   power: number
   required: number
   capturedPlayer?: Player
@@ -44,8 +42,8 @@ export interface GameState {
   currentRunner?: Player
   currentTarget?: { left: Player; right: Player }
   lastResult?: BreakthroughResult
-  commentaryText: string
   subtitleText: string
+  commentaryText: string
   isCommentaryLoading: boolean
   highlights: string[]
 }

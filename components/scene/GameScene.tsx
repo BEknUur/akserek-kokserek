@@ -4,8 +4,8 @@ import { Canvas } from '@react-three/fiber'
 import { Sky, Environment } from '@react-three/drei'
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing'
 import { Suspense, useEffect, useState } from 'react'
-import { Player } from '@/lib/store/types'
 import { useRouter } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
 
 import Steppe from './Steppe'
 import Yurt from './Yurt'
@@ -15,50 +15,51 @@ import Chain from './Chain'
 import CameraRig from './CameraRig'
 import Runner from './Runner'
 
-import PhaseIndicator from '@/components/ui/PhaseIndicator'
+import TimingBar from '@/components/ui/TimingBar'
 import TeamRoster from '@/components/ui/TeamRoster'
 import EnemyRoster from '@/components/ui/EnemyRoster'
 import Subtitles from '@/components/ui/Subtitles'
 import Commentator from '@/components/ui/Commentator'
-import BreakthroughBar from '@/components/ui/BreakthroughBar'
-import DefenseBar from '@/components/ui/DefenseBar'
 import TeamSelect from '@/components/ui/TeamSelect'
 import GameOver from '@/components/ui/GameOver'
 
 import { useGameStore } from '@/lib/store/gameStore'
 import { useGameLoop } from '@/lib/game/useGameLoop'
+import { Player } from '@/lib/store/types'
 
 // ─── 3D сцена ─────────────────────────────────────────────────────────────────
 
-function SceneContent({ onBreakthroughAnimDone, onEnemyAnimDone }: {
-  onBreakthroughAnimDone: () => void
-  onEnemyAnimDone: () => void
+function SceneContent({ onPlayerAnimDone, onBotAnimDone }: {
+  onPlayerAnimDone: () => void
+  onBotAnimDone: () => void
 }) {
   const { phase, playerTeam, enemyTeam, currentRunner, currentTarget, lastResult } = useGameStore()
 
   const isRunning   = phase === 'PLAYER_RUNS' || phase === 'ENEMY_RUNS' || phase === 'BREAKTHROUGH_ANIM'
-  const chainBroken = (phase === 'RESULT' || phase === 'BREAKTHROUGH_ANIM') && !!lastResult?.success
+  const chainBroken = phase === 'BREAKTHROUGH_ANIM' && !!lastResult?.success
+
+  // Чей бегун? (для скрытия из шеренги и анимации)
+  const playerRunning = isRunning && currentRunner?.team === 'blue'
+  const botRunning    = isRunning && currentRunner?.team === 'red'
+
+  // Какую цепь рвут и результат
+  const enemyChainBroken = playerRunning && chainBroken   // наш игрок прорвал вражескую цепь
+  const playerChainBroken = botRunning && !lastResult?.success && phase === 'BREAKTHROUGH_ANIM'
+
   const isPlayerAnim = phase === 'BREAKTHROUGH_ANIM' && currentRunner?.team === 'blue'
-  const isEnemyAnim  = phase === 'BREAKTHROUGH_ANIM' && currentRunner?.team === 'red'
+  const isBotAnim    = phase === 'BREAKTHROUGH_ANIM' && currentRunner?.team === 'red'
 
   return (
     <>
       <ambientLight intensity={0.35} color="#ffe4b5" />
-      <directionalLight
-        position={[50, 30, -20]}
-        intensity={2.5}
-        color="#ff8c42"
-        castShadow
-        shadow-mapSize={[2048, 2048]}
-        shadow-camera-far={100}
-        shadow-camera-left={-20}
-        shadow-camera-right={20}
-        shadow-camera-top={20}
-        shadow-camera-bottom={-20}
-      />
+      <directionalLight position={[50, 30, -20]} intensity={2.5} color="#ff8c42" castShadow
+        shadow-mapSize={[2048, 2048]} shadow-camera-far={100}
+        shadow-camera-left={-20} shadow-camera-right={20}
+        shadow-camera-top={20} shadow-camera-bottom={-20} />
       <directionalLight position={[-20, 15, 20]} intensity={0.4} color="#4a7abf" />
 
-      <Sky sunPosition={[100, 8, -100]} turbidity={10} rayleigh={4} mieCoefficient={0.005} mieDirectionalG={0.8} inclination={0.49} azimuth={0.25} />
+      <Sky sunPosition={[100, 8, -100]} turbidity={10} rayleigh={4}
+           mieCoefficient={0.005} mieDirectionalG={0.8} inclination={0.49} azimuth={0.25} />
       <Environment preset="sunset" />
 
       <Steppe />
@@ -67,42 +68,53 @@ function SceneContent({ onBreakthroughAnimDone, onEnemyAnimDone }: {
       <Yurt position={[-10, -1, -40]} scale={0.7} />
       <Eagle />
 
+      {/* Наша шеренга (синие) */}
       {playerTeam.players.length > 0 && (
         <>
-          <PlayerRow team={playerTeam} zOffset={4} runnerId={isRunning && currentRunner?.team === 'blue' ? currentRunner.id : undefined} />
+          <PlayerRow
+            team={playerTeam}
+            zOffset={4}
+            runnerId={playerRunning ? currentRunner!.id : undefined}
+          />
           <Chain
             team={playerTeam}
             zOffset={4}
-            brokenBetween={currentRunner?.team === 'red' && chainBroken && lastResult?.success === false ? currentTarget ?? undefined : undefined}
-            isBroken={currentRunner?.team === 'red' && !lastResult?.success && chainBroken}
+            isBroken={playerChainBroken}
+            brokenBetween={playerChainBroken ? currentTarget : undefined}
           />
         </>
       )}
 
+      {/* Вражеская шеренга (красные) */}
       {enemyTeam.players.length > 0 && (
         <>
-          <PlayerRow team={enemyTeam} zOffset={-4} highlightedId={currentTarget?.left.id} runnerId={isRunning && currentRunner?.team === 'red' ? currentRunner.id : undefined} />
+          <PlayerRow
+            team={enemyTeam}
+            zOffset={-4}
+            highlightedId={playerRunning ? currentTarget?.left.id : undefined}
+            runnerId={botRunning ? currentRunner!.id : undefined}
+          />
           <Chain
             team={enemyTeam}
             zOffset={-4}
-            brokenBetween={currentRunner?.team === 'blue' && chainBroken ? currentTarget ?? undefined : undefined}
-            isBroken={currentRunner?.team === 'blue' && chainBroken}
+            isBroken={enemyChainBroken}
+            brokenBetween={enemyChainBroken ? currentTarget : undefined}
           />
         </>
       )}
 
+      {/* Бегун */}
       {currentRunner && isRunning && (
         <Runner
           runner={currentRunner}
           targetZ={currentRunner.team === 'blue' ? -4 : 4}
           phase={phase}
           success={lastResult?.success}
-          onAnimDone={isPlayerAnim ? onBreakthroughAnimDone : isEnemyAnim ? onEnemyAnimDone : undefined}
+          onAnimDone={isPlayerAnim ? onPlayerAnimDone : isBotAnim ? onBotAnimDone : undefined}
         />
       )}
 
       <CameraRig phase={phase} />
-
       <EffectComposer>
         <Bloom intensity={0.4} luminanceThreshold={0.75} luminanceSmoothing={0.9} />
         <Vignette darkness={0.45} offset={0.3} />
@@ -112,6 +124,15 @@ function SceneContent({ onBreakthroughAnimDone, onEnemyAnimDone }: {
 }
 
 // ─── Главный компонент ────────────────────────────────────────────────────────
+
+const PHASE_LABELS: Partial<Record<string, string>> = {
+  PLAYER_CHOOSES: 'Сенің кезің',
+  PLAYER_RUNS:    'ЖАРЫП ӨТ!',
+  BOT_CHOOSING:   'Бот таңдайды...',
+  ENEMY_RUNS:     'ЦЕП ҰСТА!',
+  RESULT:         'Нәтиже',
+  SETUP:          'Дайындалуда...',
+}
 
 export default function GameScene() {
   const router = useRouter()
@@ -124,73 +145,80 @@ export default function GameScene() {
 
   const {
     startWithTeam,
-    handlePlayerHit,
-    handleDefenseHit,
-    onBreakthroughAnimDone,
-    onEnemyAnimDone,
-    onCommentaryDone,
-    handlePlayerChooses,
+    handlePlayerAttackChoice,
+    handleAttackTimingHit,
+    handleDefenseTimingHit,
+    onPlayerAnimDone,
+    onBotAnimDone,
     resetGame,
   } = useGameLoop()
 
-  // 2-шаговый выбор атаки: сначала наш игрок, потом цель
+  // 2-шаговый выбор: сначала свой игрок, потом цель
   const [pendingRunner, setPendingRunner] = useState<Player | null>(null)
 
-  // При смене фазы сбрасываем pendingRunner
   useEffect(() => {
     if (phase !== 'PLAYER_CHOOSES') setPendingRunner(null)
   }, [phase])
 
-  // При монтировании — показываем выбор команды
   useEffect(() => {
     store.setPhase('TEAM_SELECT')
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, []) // eslint-disable-line
+
+  const handleEnemyTargetClick = (enemyTarget: Player) => {
+    if (!pendingRunner) return
+    handlePlayerAttackChoice(pendingRunner, enemyTarget)
+  }
 
   return (
     <div className="relative w-screen h-screen overflow-hidden">
       {/* Canvas */}
-      <Canvas
-        camera={{ position: [0, 5, 14], fov: 60 }}
-        shadows
+      <Canvas camera={{ position: [0, 5, 14], fov: 60 }} shadows
         style={{ width: '100vw', height: '100vh', background: '#1a0a2e' }}
-        gl={{ antialias: true, alpha: false }}
-      >
+        gl={{ antialias: true, alpha: false }}>
         <Suspense fallback={null}>
-          <SceneContent
-            onBreakthroughAnimDone={onBreakthroughAnimDone}
-            onEnemyAnimDone={onEnemyAnimDone}
-          />
+          <SceneContent onPlayerAnimDone={onPlayerAnimDone} onBotAnimDone={onBotAnimDone} />
         </Suspense>
       </Canvas>
 
-      {/* ── HUD слой ── */}
+      {/* ── HUD ── */}
       <div className="absolute inset-0 pointer-events-none">
 
         {/* Фаза + раунд */}
-        {phase !== 'TEAM_SELECT' && <PhaseIndicator phase={phase} round={round} />}
+        {phase !== 'TEAM_SELECT' && PHASE_LABELS[phase] && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 text-center">
+            <AnimatePresence mode="wait">
+              <motion.div key={phase}
+                initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                className="bg-[var(--ui-bg)] border border-[var(--steppe-gold)]/40 rounded-lg px-5 py-2">
+                <p className="font-title text-[var(--steppe-gold)] text-xs tracking-widest uppercase">
+                  {PHASE_LABELS[phase]}
+                </p>
+                <p className="text-gray-500 text-xs font-body mt-0.5">Раунд {round}</p>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        )}
 
-        {/* Наша команда — шаг 1: выбрать бегуна */}
+        {/* Наша команда — шаг 1 при выборе */}
         {playerTeam.players.length > 0 && (
-          <div className={phase === 'PLAYER_CHOOSES' ? 'pointer-events-auto' : ''}>
+          <div className={phase === 'PLAYER_CHOOSES' && !pendingRunner ? 'pointer-events-auto' : ''}>
             <TeamRoster
               team={playerTeam}
               isSelectable={phase === 'PLAYER_CHOOSES' && !pendingRunner}
               selectedId={pendingRunner?.id}
-              onSelect={(p) => setPendingRunner(p)}
+              onSelect={setPendingRunner}
             />
           </div>
         )}
 
-        {/* Команда врага — шаг 2: выбрать цель (только после выбора своего) */}
+        {/* Вражеская команда — шаг 2 при выборе */}
         {enemyTeam.players.length > 0 && (
-          <div className="pointer-events-auto">
+          <div className={phase === 'PLAYER_CHOOSES' && !!pendingRunner ? 'pointer-events-auto' : ''}>
             <EnemyRoster
               team={enemyTeam}
               isSelectable={phase === 'PLAYER_CHOOSES' && !!pendingRunner}
               highlightedId={currentTarget?.left.id}
-              onSelect={(enemyTarget) => {
-                if (pendingRunner) handlePlayerChooses(pendingRunner, enemyTarget)
-              }}
+              onSelect={handleEnemyTargetClick}
             />
           </div>
         )}
@@ -198,90 +226,99 @@ export default function GameScene() {
         {/* Субтитры */}
         <Subtitles text={subtitleText} />
 
-        {/* Аташка */}
-        <Commentator text={commentaryText} isLoading={isCommentaryLoading} onDone={onCommentaryDone} />
+        {/* Комментатор */}
+        {commentaryText && (
+          <Commentator
+            text={commentaryText}
+            isLoading={isCommentaryLoading}
+            onDone={() => store.setCommentary('')}
+          />
+        )}
 
-        {/* АТАКА: наш игрок бежит → жмём ПРОБЕЛ чтобы разбить цепь */}
+        {/* TIMING BAR: атака (наш ход) */}
         {phase === 'PLAYER_RUNS' && currentRunner && currentTarget && (
           <div className="pointer-events-auto">
-            <BreakthroughBar
+            <TimingBar
+              mode="attack"
               runner={currentRunner}
               leftDefender={currentTarget.left}
               rightDefender={currentTarget.right}
-              onHit={handlePlayerHit}
+              onHit={handleAttackTimingHit}
             />
           </div>
         )}
 
-        {/* ЗАЩИТА: враг бежит → жмём ПРОБЕЛ чтобы удержать цепь */}
+        {/* TIMING BAR: защита (ход бота) */}
         {phase === 'ENEMY_RUNS' && currentRunner && currentTarget && (
           <div className="pointer-events-auto">
-            <DefenseBar
+            <TimingBar
+              mode="defense"
               runner={currentRunner}
               leftDefender={currentTarget.left}
               rightDefender={currentTarget.right}
-              onHit={handleDefenseHit}
+              onHit={handleDefenseTimingHit}
             />
           </div>
         )}
 
-        {/* PLAYER_CHOOSES — 2-шаговый оверлей */}
+        {/* PLAYER_CHOOSES подсказка по шагам */}
         {phase === 'PLAYER_CHOOSES' && (
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none z-30">
-            <div className="bg-black/75 border border-[var(--steppe-gold)]/60 rounded-2xl px-8 py-5 shadow-[0_0_40px_rgba(255,215,0,0.2)]">
-              {!pendingRunner ? (
-                <>
-                  <p className="font-title text-[var(--steppe-gold)] text-xl mb-1">ШАГ 1: КІМ БАРАДЫ?</p>
-                  <p className="text-white text-sm font-body mb-1">Кто побежит ломать цепь?</p>
-                  <p className="text-blue-300 text-xs font-body">← Выбери своего игрока слева</p>
-                </>
-              ) : (
-                <>
-                  <p className="font-title text-[var(--steppe-gold)] text-xl mb-1">ШАГ 2: КІМГЕ?</p>
-                  <p className="text-white text-sm font-body mb-1">
-                    <span className="text-blue-300">{pendingRunner.name}</span> атакует — куда?
-                  </p>
-                  <p className="text-red-300 text-xs font-body">Выбери врага справа →</p>
-                </>
-              )}
-            </div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-30">
+            <AnimatePresence mode="wait">
+              <motion.div key={pendingRunner?.id ?? 'step1'}
+                initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
+                className="bg-black/75 border border-[var(--steppe-gold)]/60 rounded-2xl px-8 py-5 text-center shadow-[0_0_40px_rgba(255,215,0,0.2)]">
+                {!pendingRunner ? (
+                  <>
+                    <p className="font-title text-[var(--steppe-gold)] text-xl mb-1">ШАГ 1</p>
+                    <p className="text-white text-sm font-body">Кто побежит ломать цепь?</p>
+                    <p className="text-blue-300 text-xs font-body mt-1">← Выбери своего игрока</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="font-title text-[var(--steppe-gold)] text-xl mb-1">ШАГ 2</p>
+                    <p className="text-white text-sm font-body">
+                      <span className="text-blue-300 font-semibold">{pendingRunner.name}</span> атакует — куда?
+                    </p>
+                    <p className="text-red-300 text-xs font-body mt-1">Выбери цель в команде врага →</p>
+                  </>
+                )}
+              </motion.div>
+            </AnimatePresence>
           </div>
         )}
 
         {/* Результат хода */}
         {phase === 'RESULT' && lastResult && (
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none z-30">
-            <div className={`rounded-2xl px-8 py-4 border ${lastResult.success ? 'bg-green-900/80 border-green-400/60' : 'bg-red-900/80 border-red-400/60'}`}>
-              <p className={`font-title text-3xl ${lastResult.success ? 'text-green-300' : 'text-red-300'}`}>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-30">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
+              className={`rounded-2xl px-10 py-5 text-center border ${
+                lastResult.success ? 'bg-green-900/85 border-green-400/60' : 'bg-red-900/85 border-red-400/60'
+              }`}>
+              <p className={`font-title text-4xl ${lastResult.success ? 'text-green-300' : 'text-red-300'}`}>
                 {lastResult.success ? '✓ ЖАРЫП ӨТТІ!' : '✗ ТОҚТАТЫЛДЫ'}
               </p>
-              <p className="text-gray-300 text-sm font-body mt-1">
-                {lastResult.success ? 'Прорыв удался!' : 'Прорыв не удался'}
-              </p>
-            </div>
+            </motion.div>
           </div>
         )}
 
         {/* Кнопка назад */}
-        <button
-          onClick={() => router.push('/')}
+        <button onClick={() => router.push('/')}
           className="absolute top-4 left-4 text-gray-500 hover:text-white text-xs font-body
-                     bg-black/30 hover:bg-black/50 px-3 py-1.5 rounded transition-colors pointer-events-auto"
-        >
+                     bg-black/30 hover:bg-black/50 px-3 py-1.5 rounded transition-colors pointer-events-auto">
           ← Басты бет
         </button>
       </div>
 
       {/* Выбор команды */}
-      {phase === 'TEAM_SELECT' && (
-        <TeamSelect onSelect={startWithTeam} />
-      )}
+      {phase === 'TEAM_SELECT' && <TeamSelect onSelect={startWithTeam} />}
 
       {/* Game Over */}
       {phase === 'GAME_OVER' && (
         <div className="absolute inset-0 z-50">
           <GameOver
-            won={enemyTeam.players.length === 0}
+            won={enemyTeam.players.length <= 1}
             playerTeamName={playerTeam.name}
             enemyTeamName={enemyTeam.name}
             onRestart={() => { resetGame(); store.setPhase('TEAM_SELECT') }}
