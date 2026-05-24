@@ -186,6 +186,23 @@ export default function GameScene() {
           </div>
         )}
 
+        {/* PLAYER_CHOOSES — центральный оверлей с подсказкой */}
+        {phase === 'PLAYER_CHOOSES' && (
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none z-30">
+            <div className="bg-black/70 border border-[var(--steppe-gold)]/60 rounded-2xl px-8 py-5 shadow-[0_0_40px_rgba(255,215,0,0.2)]">
+              <p className="font-title text-[var(--steppe-gold)] text-2xl mb-1">
+                ЖАУДЫ ШАҚЫР!
+              </p>
+              <p className="text-white text-sm font-body mb-1">
+                Сенің кезің — кімді вызоветь?
+              </p>
+              <p className="text-gray-400 text-xs font-body">
+                Оң жақтағы жау тізімінен біреуін таңда →
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Кнопка назад */}
         <button
           onClick={() => router.push('/')}

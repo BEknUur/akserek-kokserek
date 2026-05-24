@@ -32,23 +32,33 @@ function pick<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)]
 }
 
-export async function getFallbackTeam(teamName: string, color: 'blue' | 'red'): Promise<Team> {
-  const names = await getNames()
-  const allNames = [...names.male, ...names.female]
-  const shuffled = [...allNames].sort(() => Math.random() - 0.5).slice(0, 5)
-
-  const players: Player[] = shuffled.map((name, i) => ({
+function makeTeam(teamName: string, color: 'blue' | 'red', names: string[]): Team {
+  const players: Player[] = names.map((name, i) => ({
     id: `${color}-${i}-${Math.random().toString(36).slice(2, 9)}`,
     name,
-    kush: Math.floor(Math.random() * 6) + 3,       // 3–8
-    karsylyk: Math.floor(Math.random() * 6) + 3,   // 3–8
+    kush: Math.floor(Math.random() * 6) + 3,
+    karsylyk: Math.floor(Math.random() * 6) + 3,
     description: '',
     isCaptain: i === 0,
     team: color,
     position: i,
   }))
-
   return { name: teamName, players, color }
+}
+
+// Генерирует обе команды из одного пула имён — никаких дублей между командами
+export async function getFallbackTeams(): Promise<[Team, Team]> {
+  const names = await getNames()
+  const allNames = [...names.male, ...names.female]
+  const shuffled = [...allNames].sort(() => Math.random() - 0.5)
+
+  const blueNames = shuffled.slice(0, 5)
+  const redNames = shuffled.slice(5, 10)
+
+  return [
+    makeTeam('Ақсерек', 'blue', blueNames),
+    makeTeam('Көксерек', 'red', redNames),
+  ]
 }
 
 export async function getFallbackCry(): Promise<{ cry_kz: string; cry_ru: string }> {
