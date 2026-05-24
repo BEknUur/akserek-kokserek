@@ -28,7 +28,10 @@ export interface Team {
 }
 
 export interface BreakthroughResult {
+  mode: 'attack' | 'defense'
   success: boolean   // attack: прорыв удался | defense: цепь устояла
+  message: string
+  subMessage: string
   power: number
   required: number
   capturedPlayer?: Player

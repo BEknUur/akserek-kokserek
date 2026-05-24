@@ -35,10 +35,10 @@ export function useGameLoop() {
   }, []) // eslint-disable-line
 
   // ─── 3. PLAYER_RUNS: игрок нажал SPACE (атака) ──────────────────────
-  const handleAttackTimingHit = useCallback((power: number) => {
+  const handleAttackTimingHit = useCallback((power: number, hitGreen: boolean) => {
     const { currentRunner, currentTarget } = useGameStore.getState()
     if (!currentRunner || !currentTarget) return
-    const result = calculateBreakthrough(currentRunner, currentTarget.left, currentTarget.right, power)
+    const result = calculateBreakthrough(currentRunner, currentTarget.left, currentTarget.right, power, hitGreen)
     store.setLastResult(result)
     store.setPhase('BREAKTHROUGH_ANIM')
   }, []) // eslint-disable-line
@@ -97,11 +97,11 @@ export function useGameLoop() {
   }, []) // eslint-disable-line
 
   // ─── 6. ENEMY_RUNS: игрок нажал SPACE (защита) ──────────────────────
-  const handleDefenseTimingHit = useCallback((power: number) => {
+  const handleDefenseTimingHit = useCallback((power: number, hitGreen: boolean) => {
     const { currentRunner, currentTarget } = useGameStore.getState()
     if (!currentRunner || !currentTarget) return
     // success = true → цепь устояла (бот пойман)
-    const result = calculateDefense(currentRunner, currentTarget.left, currentTarget.right, power)
+    const result = calculateDefense(currentRunner, currentTarget.left, currentTarget.right, power, hitGreen)
     store.setLastResult(result)
     store.setPhase('BREAKTHROUGH_ANIM')
   }, []) // eslint-disable-line

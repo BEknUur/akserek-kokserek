@@ -11,7 +11,7 @@ interface TimingBarProps {
   runner: Player
   leftDefender: Player
   rightDefender: Player
-  onHit: (power: number) => void
+  onHit: (power: number, hitGreen: boolean) => void
 }
 
 export default function TimingBar({ mode, runner, leftDefender, rightDefender, onHit }: TimingBarProps) {
@@ -45,8 +45,9 @@ export default function TimingBar({ mode, runner, leftDefender, rightDefender, o
     if (hit) return
     setHit(true)
     cancelAnimationFrame(rafRef.current)
-    onHit(posRef.current)
-  }, [hit, onHit])
+    const hitGreen = posRef.current >= greenStart && posRef.current <= greenStart + greenWidth
+    onHit(posRef.current, hitGreen)
+  }, [greenStart, greenWidth, hit, onHit])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

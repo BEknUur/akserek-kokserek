@@ -45,6 +45,7 @@ function SceneContent({ onPlayerAnimDone, onBotAnimDone }: {
   // Какую цепь рвут и результат
   const enemyChainBroken = playerRunning && chainBroken   // наш игрок прорвал вражескую цепь
   const playerChainBroken = botRunning && !lastResult?.success && phase === 'BREAKTHROUGH_ANIM'
+  const runnerBrokeThrough = botRunning ? !lastResult?.success : lastResult?.success
 
   const isPlayerAnim = phase === 'BREAKTHROUGH_ANIM' && currentRunner?.team === 'blue'
   const isBotAnim    = phase === 'BREAKTHROUGH_ANIM' && currentRunner?.team === 'red'
@@ -109,7 +110,7 @@ function SceneContent({ onPlayerAnimDone, onBotAnimDone }: {
           runner={currentRunner}
           targetZ={currentRunner.team === 'blue' ? -4 : 4}
           phase={phase}
-          success={lastResult?.success}
+          success={runnerBrokeThrough}
           onAnimDone={isPlayerAnim ? onPlayerAnimDone : isBotAnim ? onBotAnimDone : undefined}
         />
       )}
@@ -297,8 +298,9 @@ export default function GameScene() {
                 lastResult.success ? 'bg-green-900/85 border-green-400/60' : 'bg-red-900/85 border-red-400/60'
               }`}>
               <p className={`font-title text-4xl ${lastResult.success ? 'text-green-300' : 'text-red-300'}`}>
-                {lastResult.success ? '✓ ЖАРЫП ӨТТІ!' : '✗ ТОҚТАТЫЛДЫ'}
+                {lastResult.success ? '✓' : '✗'} {lastResult.message}
               </p>
+              <p className="text-white/85 text-sm font-body mt-1">{lastResult.subMessage}</p>
             </motion.div>
           </div>
         )}
