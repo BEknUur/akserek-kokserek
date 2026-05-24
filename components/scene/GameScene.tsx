@@ -131,7 +131,7 @@ export default function GameScene() {
     <div className="relative w-screen h-screen overflow-hidden">
       {/* Canvas */}
       <Canvas
-        camera={{ position: [0, 8, 20], fov: 60 }}
+        camera={{ position: [0, 5, 14], fov: 60 }}
         shadows
         style={{ width: '100vw', height: '100vh', background: '#1a0a2e' }}
         gl={{ antialias: true, alpha: false }}
