@@ -1,4 +1,6 @@
 import { Difficulty } from '@/lib/game/difficulty'
+import { WeatherType } from '@/lib/game/weatherSystem'
+import { GameMode, TournamentStage } from '@/lib/game/tournament'
 
 export type GamePhase =
   | 'LANDING'
@@ -10,6 +12,7 @@ export type GamePhase =
   | 'ENEMY_RUNS'          // timing bar: DEFENSE
   | 'BREAKTHROUGH_ANIM'   // анимация прорыва/отскока
   | 'RESULT'              // показ результата
+  | 'TOURNAMENT_PROGRESS'
   | 'GAME_OVER'
 
 export interface Player {
@@ -46,6 +49,10 @@ export interface GameState {
   round: number
   opponentType: 'bot' | 'openai'
   difficulty: Difficulty
+  gameMode: GameMode
+  weather: WeatherType
+  tauntText: string
+  tournamentStage: TournamentStage
   currentRunner?: Player
   currentTarget?: { left: Player; right: Player }
   lastResult?: BreakthroughResult

@@ -9,6 +9,8 @@ import { checkWinCondition } from './stateMachine'
 import { Player } from '@/lib/store/types'
 import { getOpenAiMove, toOpenAiSafeGameState } from '@/lib/ai/openaiOpponent'
 import { DIFFICULTY_CONFIG, simulateAiTiming } from './difficulty'
+import { getAiTaunt } from '@/lib/ai/taunts'
+import { getNextTournamentStage, getTournamentDifficulty } from './tournament'
 
 export function useGameLoop() {
   const store = useGameStore()
@@ -16,6 +18,11 @@ export function useGameLoop() {
   // ─── 1. СТАРТ: выбрали команду ──────────────────────────────────────
   const startWithTeam = useCallback(async (profile: TeamProfile) => {
     store.setPhase('SETUP')
+    const { gameMode, tournamentStage } = useGameStore.getState()
+    if (gameMode === 'tournament') {
+      store.setOpponentType('bot')
+      store.setDifficulty(getTournamentDifficulty(tournamentStage))
+    }
     const [playerTeam, enemyTeam] = await getFallbackTeams(profile)
     store.setTeams(playerTeam, enemyTeam)
     store.setPhase('PLAYER_CHOOSES')
@@ -77,16 +84,32 @@ export function useGameLoop() {
       if (runner) store.transferPlayer(runner, 'red')
     }
 
-    const { playerTeam: pt, enemyTeam: et } = useGameStore.getState()
+    const { playerTeam: pt, enemyTeam: et, difficulty, gameMode, tournamentStage } = useGameStore.getState()
     const winner = checkWinCondition(pt, et)
 
     const event = lastResult.success ? 'successful_breakthrough' : 'failed_breakthrough'
     const commentary = await getFallbackCommentary(event)
     store.setCommentary(commentary)
+    const taunt = getAiTaunt({ result: lastResult, playerTeam: pt, enemyTeam: et, difficulty })
+    store.setTauntText(taunt)
+    store.setAiCommentary(taunt)
+    store.setSubtitle(taunt)
 
     setTimeout(() => {
       store.setCommentary('')
-      if (winner) { store.setPhase('GAME_OVER'); return }
+      store.setAiCommentary('')
+      store.setTauntText('')
+      store.setSubtitle('')
+      if (winner) {
+        if (gameMode === 'tournament' && et.players.length <= 1) {
+          const nextStage = getNextTournamentStage(tournamentStage)
+          store.setTournamentStage(nextStage)
+          store.setPhase('TOURNAMENT_PROGRESS')
+          return
+        }
+        store.setPhase('GAME_OVER')
+        return
+      }
       startBotTurn()
     }, 2500)
   }, []) // eslint-disable-line
@@ -191,16 +214,32 @@ export function useGameLoop() {
       if (captured) store.transferPlayer(captured, 'red')
     }
 
-    const { playerTeam: pt, enemyTeam: et } = useGameStore.getState()
+    const { playerTeam: pt, enemyTeam: et, difficulty, gameMode, tournamentStage } = useGameStore.getState()
     const winner = checkWinCondition(pt, et)
 
     const event = lastResult.success ? 'team_winning' : 'enemy_fails'
     const commentary = await getFallbackCommentary(event)
     store.setCommentary(commentary)
+    const taunt = getAiTaunt({ result: lastResult, playerTeam: pt, enemyTeam: et, difficulty })
+    store.setTauntText(taunt)
+    store.setAiCommentary(taunt)
+    store.setSubtitle(taunt)
 
     setTimeout(() => {
       store.setCommentary('')
-      if (winner) { store.setPhase('GAME_OVER'); return }
+      store.setAiCommentary('')
+      store.setTauntText('')
+      store.setSubtitle('')
+      if (winner) {
+        if (gameMode === 'tournament' && et.players.length <= 1) {
+          const nextStage = getNextTournamentStage(tournamentStage)
+          store.setTournamentStage(nextStage)
+          store.setPhase('TOURNAMENT_PROGRESS')
+          return
+        }
+        store.setPhase('GAME_OVER')
+        return
+      }
       store.setPhase('PLAYER_CHOOSES')
     }, 2500)
   }, []) // eslint-disable-line

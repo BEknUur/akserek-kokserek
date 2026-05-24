@@ -1,11 +1,17 @@
 import { create } from 'zustand'
 import { GameState, GamePhase, Player, Team, BreakthroughResult } from './types'
 import { Difficulty } from '@/lib/game/difficulty'
+import { WeatherType } from '@/lib/game/weatherSystem'
+import { GameMode, TournamentStage } from '@/lib/game/tournament'
 
 interface GameStore extends GameState {
   setPhase: (phase: GamePhase) => void
   setOpponentType: (type: 'bot' | 'openai') => void
   setDifficulty: (difficulty: Difficulty) => void
+  setGameMode: (mode: GameMode) => void
+  setWeather: (weather: WeatherType) => void
+  setTauntText: (text: string) => void
+  setTournamentStage: (stage: TournamentStage) => void
   setTeams: (playerTeam: Team, enemyTeam: Team) => void
   setRunner: (runner: Player) => void
   setTarget: (left: Player, right: Player) => void
@@ -41,6 +47,10 @@ const initialState: GameState = {
   round: 1,
   opponentType: 'bot',
   difficulty: 'normal',
+  gameMode: 'single',
+  weather: 'sunny',
+  tauntText: '',
+  tournamentStage: 'quarter',
   currentRunner: undefined,
   currentTarget: undefined,
   lastResult: undefined,
@@ -68,6 +78,19 @@ export const useGameStore = create<GameStore>((set) => ({
     }
     set({ difficulty })
   },
+
+  setGameMode: (mode) => set({ gameMode: mode }),
+
+  setWeather: (weather) => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('akserek-weather', weather)
+    }
+    set({ weather })
+  },
+
+  setTauntText: (text) => set({ tauntText: text }),
+
+  setTournamentStage: (stage) => set({ tournamentStage: stage }),
 
   setTeams: (playerTeam, enemyTeam) => set({ playerTeam, enemyTeam }),
 
@@ -126,6 +149,9 @@ export const useGameStore = create<GameStore>((set) => ({
       ...initialState,
       difficulty: state.difficulty,
       opponentType: state.opponentType,
+      gameMode: state.gameMode,
+      weather: state.weather,
+      tournamentStage: state.tournamentStage,
       isVoiceEnabled: state.isVoiceEnabled,
       volume: state.volume,
     })),

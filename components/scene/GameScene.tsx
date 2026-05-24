@@ -32,10 +32,17 @@ import GameOver from '@/components/ui/GameOver'
 import AiChat from '@/components/ui/AiChat'
 import VoiceControls from '@/components/ui/VoiceControls'
 import VoiceNarrator from '@/components/ui/VoiceNarrator'
+import WeatherEffects from '@/components/weather/WeatherEffects'
+import CrowdGroup from '@/components/crowd/CrowdGroup'
+import FestivalDecor from '@/components/crowd/FestivalDecor'
+import CrowdAudio from '@/components/crowd/CrowdAudio'
+import TournamentProgress from '@/components/tournament/TournamentProgress'
+import VoiceCommandButton from '@/components/voice/VoiceCommandButton'
 
 import { useGameStore } from '@/lib/store/gameStore'
 import { useGameLoop } from '@/lib/game/useGameLoop'
 import { Player } from '@/lib/store/types'
+import { VoiceCommand } from '@/lib/voice/speechRecognition'
 
 // ─── 3D сцена ─────────────────────────────────────────────────────────────────
 
@@ -86,7 +93,10 @@ function SceneContent({ onPlayerAnimDone, onBotAnimDone }: {
       <Campfire />
       <Horses />
       <SteppeDecor />
+      <FestivalDecor />
       <AmbientParticles />
+      <WeatherEffects />
+      <CrowdGroup />
       <Eagle />
 
       {/* Наша шеренга (синие) */}
@@ -162,6 +172,7 @@ export default function GameScene() {
     commentaryText, isCommentaryLoading, subtitleText,
     isAiThinking, aiCommentary,
     difficulty,
+    weather,
     currentRunner, currentTarget, lastResult,
   } = useGameStore()
   const store = useGameStore()
@@ -189,6 +200,10 @@ export default function GameScene() {
     if (saved === 'easy' || saved === 'normal' || saved === 'hard' || saved === 'impossible') {
       store.setDifficulty(saved)
     }
+    const savedWeather = window.localStorage.getItem('akserek-weather')
+    if (savedWeather === 'random' || savedWeather === 'sunny' || savedWeather === 'rain' || savedWeather === 'fog' || savedWeather === 'night' || savedWeather === 'storm') {
+      store.setWeather(savedWeather)
+    }
   }, []) // eslint-disable-line
 
   const handleEnemyTargetClick = (enemyTarget: Player) => {
@@ -198,12 +213,33 @@ export default function GameScene() {
 
   const impossiblePressure = difficulty === 'impossible' &&
     (phase === 'PLAYER_RUNS' || phase === 'ENEMY_RUNS' || phase === 'BOT_CHOOSING')
+  const stormPressure = weather === 'storm' && (phase === 'PLAYER_RUNS' || phase === 'ENEMY_RUNS')
+
+  const handleVoiceCommand = (command: VoiceCommand) => {
+    store.setSubtitle(`${command}!`)
+    if (phase === 'PLAYER_CHOOSES') {
+      if (!pendingRunner) {
+        const strongest = [...playerTeam.players].sort((a, b) => b.kush - a.kush)[0]
+        if (strongest) setPendingRunner(strongest)
+      } else {
+        const weakest = [...enemyTeam.players].sort((a, b) => a.karsylyk - b.karsylyk)[0]
+        if (weakest) handlePlayerAttackChoice(pendingRunner, weakest)
+      }
+    }
+    if (phase === 'PLAYER_RUNS' && currentRunner && currentTarget) {
+      handleAttackTimingHit(50, true)
+    }
+    if (phase === 'ENEMY_RUNS' && currentRunner && currentTarget) {
+      handleDefenseTimingHit(50, true)
+    }
+    setTimeout(() => store.setSubtitle(''), 900)
+  }
 
   return (
     <motion.div
       className={`relative w-screen h-screen overflow-hidden ${difficulty === 'impossible' ? 'bg-red-950' : ''}`}
-      animate={impossiblePressure ? { x: [0, -2, 2, -1, 1, 0] } : { x: 0 }}
-      transition={impossiblePressure ? { duration: 0.22, repeat: Infinity, repeatDelay: 0.28 } : undefined}
+      animate={impossiblePressure || stormPressure ? { x: [0, -2, 2, -1, 1, 0] } : { x: 0 }}
+      transition={impossiblePressure || stormPressure ? { duration: 0.22, repeat: Infinity, repeatDelay: 0.28 } : undefined}
     >
       {/* Canvas */}
       <Canvas camera={{ position: [0, 5, 14], fov: 60 }} shadows
@@ -237,9 +273,16 @@ export default function GameScene() {
         </div>
       )}
 
+      {(weather === 'fog' || weather === 'night' || weather === 'storm') && (
+        <div className={`absolute inset-0 z-20 pointer-events-none ${
+          weather === 'fog' ? 'bg-slate-200/12 backdrop-blur-[1px]' : weather === 'night' ? 'bg-indigo-950/35' : 'bg-slate-950/20'
+        }`} />
+      )}
+
       {/* ── HUD ── */}
       <div className="absolute inset-0 pointer-events-none">
         <VoiceNarrator />
+        <CrowdAudio />
 
         {/* Фаза + раунд */}
         {phase !== 'TEAM_SELECT' && PHASE_LABELS[phase] && (
@@ -391,6 +434,7 @@ export default function GameScene() {
         {phase !== 'TEAM_SELECT' && (
           <>
             <VoiceControls />
+            <VoiceCommandButton onCommand={handleVoiceCommand} />
             {phase !== 'GAME_OVER' && <AiChat />}
           </>
         )}
@@ -398,6 +442,15 @@ export default function GameScene() {
 
       {/* Выбор команды */}
       {phase === 'TEAM_SELECT' && <TeamSelect onSelect={startWithTeam} />}
+
+      {phase === 'TOURNAMENT_PROGRESS' && (
+        <TournamentProgress
+          onContinue={() => {
+            resetGame()
+            store.setPhase('TEAM_SELECT')
+          }}
+        />
+      )}
 
       {/* Game Over */}
       {phase === 'GAME_OVER' && (

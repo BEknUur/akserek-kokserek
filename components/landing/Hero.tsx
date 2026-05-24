@@ -8,6 +8,7 @@ import KazakhOrnament from '@/components/shared/KazakhOrnament'
 import dynamic from 'next/dynamic'
 import { useGameStore } from '@/lib/store/gameStore'
 import { Difficulty } from '@/lib/game/difficulty'
+import { WeatherType, resolveWeather } from '@/lib/game/weatherSystem'
 
 const PreviewScene = dynamic(() => import('@/components/scene/PreviewScene'), {
   ssr: false,
@@ -19,16 +20,35 @@ export default function Hero() {
   const setOpponentType = useGameStore((state) => state.setOpponentType)
   const difficulty = useGameStore((state) => state.difficulty)
   const setDifficulty = useGameStore((state) => state.setDifficulty)
+  const weather = useGameStore((state) => state.weather)
+  const setWeather = useGameStore((state) => state.setWeather)
+  const setGameMode = useGameStore((state) => state.setGameMode)
+  const setTournamentStage = useGameStore((state) => state.setTournamentStage)
 
   useEffect(() => {
     const saved = window.localStorage.getItem('akserek-difficulty')
     if (saved === 'easy' || saved === 'normal' || saved === 'hard' || saved === 'impossible') {
       setDifficulty(saved)
     }
-  }, [setDifficulty])
+    const savedWeather = window.localStorage.getItem('akserek-weather')
+    if (savedWeather === 'random' || savedWeather === 'sunny' || savedWeather === 'rain' || savedWeather === 'fog' || savedWeather === 'night' || savedWeather === 'storm') {
+      setWeather(savedWeather)
+    }
+  }, [setDifficulty, setWeather])
 
   const startGame = (opponentType: 'bot' | 'openai') => {
+    if (weather === 'random') setWeather(resolveWeather('random'))
     setOpponentType(opponentType)
+    setGameMode(opponentType === 'openai' ? 'ai' : 'single')
+    router.push('/game')
+  }
+
+  const startTournament = () => {
+    if (weather === 'random') setWeather(resolveWeather('random'))
+    setGameMode('tournament')
+    setOpponentType('bot')
+    setTournamentStage('quarter')
+    setDifficulty('normal')
     router.push('/game')
   }
 
@@ -48,6 +68,14 @@ export default function Hero() {
     hard: 'bg-orange-500',
     impossible: 'bg-red-500',
   }
+  const weatherOptions: Array<{ id: WeatherType; label: string }> = [
+    { id: 'random', label: 'Random' },
+    { id: 'sunny', label: 'Sunny' },
+    { id: 'rain', label: 'Rain' },
+    { id: 'fog', label: 'Fog' },
+    { id: 'night', label: 'Night' },
+    { id: 'storm', label: 'Storm' },
+  ]
 
   return (
     <div className="relative min-h-screen overflow-hidden pt-24">
@@ -128,12 +156,31 @@ export default function Hero() {
               ))}
             </div>
 
+            <div className="mt-4 flex max-w-2xl flex-wrap gap-2">
+              {weatherOptions.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setWeather(item.id)}
+                  className={`rounded border px-3 py-1.5 font-body text-xs transition-colors ${
+                    weather === item.id
+                      ? 'border-[var(--steppe-gold)] bg-[var(--steppe-gold)]/15 text-[var(--steppe-gold)]'
+                      : 'border-white/15 bg-black/30 text-white/65 hover:border-white/35'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+
             <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <KazakhButton onClick={() => startGame('bot')} variant="primary">
                 Обычная игра
               </KazakhButton>
               <KazakhButton onClick={() => startGame('openai')} variant="primary">
                 Играть с AI
+              </KazakhButton>
+              <KazakhButton onClick={startTournament} variant="primary">
+                Tournament
               </KazakhButton>
               <KazakhButton onClick={() => router.push('/menu')} variant="secondary">
                 Мәзір

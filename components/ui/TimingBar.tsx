@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Player } from '@/lib/store/types'
 import { useGameStore } from '@/lib/store/gameStore'
 import { DIFFICULTY_CONFIG } from '@/lib/game/difficulty'
+import { WEATHER_CONFIG, resolveWeather } from '@/lib/game/weatherSystem'
 
 export type TimingMode = 'attack' | 'defense'
 
@@ -18,7 +19,9 @@ interface TimingBarProps {
 
 export default function TimingBar({ mode, runner, leftDefender, rightDefender, onHit }: TimingBarProps) {
   const difficulty = useGameStore((state) => state.difficulty)
+  const weather = useGameStore((state) => state.weather)
   const config = DIFFICULTY_CONFIG[difficulty]
+  const weatherConfig = WEATHER_CONFIG[resolveWeather(weather)]
   const [cursorPos, setCursorPos] = useState(0)
   const [hit, setHit] = useState(false)
   const [showFlash, setShowFlash] = useState(true)
@@ -32,14 +35,17 @@ export default function TimingBar({ mode, runner, leftDefender, rightDefender, o
   const baseSpeed = isAttack
     ? 0.4 + (runner.kush / 10) * 0.6          // атака: сила бегуна
     : 0.45 + (runner.kush / 10) * 0.55         // защита: сила атакующего бота
-  const speed = baseSpeed * config.timingSpeed
+  const unstablePulse = weatherConfig.instability > 0
+    ? 1 + Math.sin(Date.now() / 180) * weatherConfig.instability
+    : 1
+  const speed = baseSpeed * config.timingSpeed * weatherConfig.timingSpeedModifier * unstablePulse
 
   // Ширина зелёной зоны
   const chainAvg = (leftDefender.karsylyk + rightDefender.karsylyk) / 2
   const baseGreenWidth = isAttack
     ? Math.max(18, 42 - chainAvg * 2)           // атака: зона уже при сильных защитниках
     : Math.max(15, chainAvg * 3.2)              // защита: зона шире при сильной цепи
-  const greenWidth = Math.max(5, Math.min(34, baseGreenWidth * (config.greenZoneSize / 0.2)))
+  const greenWidth = Math.max(5, Math.min(34, baseGreenWidth * (config.greenZoneSize / 0.2) * weatherConfig.greenZoneModifier))
   const greenStart = 50 - greenWidth / 2
 
   useEffect(() => {
