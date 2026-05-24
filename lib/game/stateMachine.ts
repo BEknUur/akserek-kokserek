@@ -1,8 +1,9 @@
 import { GamePhase, Team } from '@/lib/store/types'
 
 export function checkWinCondition(playerTeam: Team, enemyTeam: Team): 'player' | 'enemy' | null {
-  if (enemyTeam.players.length === 0) return 'player'
-  if (playerTeam.players.length === 0) return 'enemy'
+  // Цепь нужна минимум из 2 человек — при 1 игроке нет цепи → команда проигрывает
+  if (enemyTeam.players.length <= 1) return 'player'
+  if (playerTeam.players.length <= 1) return 'enemy'
   return null
 }
 

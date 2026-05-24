@@ -69,7 +69,7 @@ function SceneContent({ onBreakthroughAnimDone, onEnemyAnimDone }: {
 
       {playerTeam.players.length > 0 && (
         <>
-          <PlayerRow team={playerTeam} zOffset={4} runnerId={currentRunner?.team === 'blue' ? currentRunner.id : undefined} />
+          <PlayerRow team={playerTeam} zOffset={4} runnerId={isRunning && currentRunner?.team === 'blue' ? currentRunner.id : undefined} />
           <Chain
             team={playerTeam}
             zOffset={4}
@@ -81,7 +81,7 @@ function SceneContent({ onBreakthroughAnimDone, onEnemyAnimDone }: {
 
       {enemyTeam.players.length > 0 && (
         <>
-          <PlayerRow team={enemyTeam} zOffset={-4} highlightedId={currentTarget?.left.id} runnerId={currentRunner?.team === 'red' ? currentRunner.id : undefined} />
+          <PlayerRow team={enemyTeam} zOffset={-4} highlightedId={currentTarget?.left.id} runnerId={isRunning && currentRunner?.team === 'red' ? currentRunner.id : undefined} />
           <Chain
             team={enemyTeam}
             zOffset={-4}
