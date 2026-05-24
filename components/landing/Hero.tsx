@@ -14,7 +14,7 @@ export default function Hero() {
   const router = useRouter()
 
   return (
-    <div className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden">
+    <div className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden pt-24">
       {/* 3D степь на фоне */}
       <div className="absolute inset-0 z-0">
         <PreviewScene />
@@ -77,6 +77,9 @@ export default function Hero() {
         >
           <KazakhButton onClick={() => router.push('/game')} variant="primary">
             Ойынды бастау
+          </KazakhButton>
+          <KazakhButton onClick={() => router.push('/menu')} variant="secondary">
+            Мәзір
           </KazakhButton>
           <KazakhButton
             onClick={() => {

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { Cinzel_Decorative, Nunito, Noto_Sans } from 'next/font/google'
+import MainNav from '@/components/layout/MainNav'
 
 const cinzel = Cinzel_Decorative({
   weight: ['400', '700', '900'],
@@ -36,6 +37,7 @@ export default function RootLayout({
   return (
     <html lang="kk" className={`h-full ${cinzel.variable} ${nunito.variable} ${notoSans.variable}`}>
       <body className="min-h-full bg-[#0a0e1a] text-white" style={{ fontFamily: 'var(--font-nunito), sans-serif' }}>
+        <MainNav />
         {children}
       </body>
     </html>

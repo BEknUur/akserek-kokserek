@@ -8,21 +8,21 @@ const steps = [
     title: 'Клич',
     titleKz: 'Шақыру',
     desc: 'Команда кричит: «Ақсерек, көксерек, бізден сізге кім керек?» и вызывает игрока противника',
-    icon: '📣',
+    mark: 'I',
   },
   {
     num: '02',
     title: 'Прорыв',
     titleKz: 'Жарып өту',
     desc: 'Вызванный игрок бежит и пытается разорвать цепь рук. Попади в нужный момент — нажми ПРОБЕЛ!',
-    icon: '⚡',
+    mark: 'II',
   },
   {
     num: '03',
     title: 'Плен или победа',
     titleKz: 'Тұтқын немесе жеңіс',
     desc: 'Прорвал — забираешь игрока. Не прорвал — сам переходишь в плен. Побеждает команда, забравшая всех!',
-    icon: '🏆',
+    mark: 'III',
   },
 ]
 
@@ -73,7 +73,9 @@ export default function Rules() {
               {step.num}
             </div>
 
-            <div className="text-4xl mb-4 mt-2">{step.icon}</div>
+            <div className="mx-auto mb-5 mt-3 grid h-14 w-14 place-items-center border border-[var(--steppe-gold)]/60 text-[var(--steppe-gold)]">
+              <span className="font-title text-lg">{step.mark}</span>
+            </div>
 
             <h3 className="font-title text-white text-lg mb-1">{step.title}</h3>
             <p className="font-kazakh text-[var(--steppe-gold)] text-xs mb-3">{step.titleKz}</p>
