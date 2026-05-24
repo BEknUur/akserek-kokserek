@@ -1,0 +1,71 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+
+interface CommentatorProps {
+  text: string
+  isLoading: boolean
+  onDone?: () => void
+}
+
+function TypewriterText({ text, speed = 35, onDone }: { text: string; speed?: number; onDone?: () => void }) {
+  const [displayed, setDisplayed] = useState('')
+
+  useEffect(() => {
+    setDisplayed('')
+    if (!text) return
+    let i = 0
+    const interval = setInterval(() => {
+      i++
+      setDisplayed(text.slice(0, i))
+      if (i >= text.length) {
+        clearInterval(interval)
+        setTimeout(() => onDone?.(), 1800)
+      }
+    }, speed)
+    return () => clearInterval(interval)
+  }, [text, speed, onDone])
+
+  return <span>{displayed}</span>
+}
+
+export default function Commentator({ text, isLoading, onDone }: CommentatorProps) {
+  return (
+    <div className="absolute top-4 right-4 z-40 w-72">
+      <AnimatePresence>
+        {(text || isLoading) && (
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 50 }}
+            transition={{ duration: 0.4 }}
+            className="bg-[var(--ui-bg)] border border-[var(--steppe-gold)]/50 rounded-xl p-4 shadow-xl"
+          >
+            {/* Аватар аташки */}
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-3xl">👴🏽</span>
+              <div>
+                <p className="font-title text-[var(--steppe-gold)] text-xs">Аташка</p>
+                <p className="text-gray-500 text-[10px] font-body">Комментатор</p>
+              </div>
+            </div>
+
+            <div className="text-gray-200 text-sm font-kazakh leading-relaxed min-h-[40px]">
+              {isLoading ? (
+                <motion.span
+                  animate={{ opacity: [0.3, 1, 0.3] }}
+                  transition={{ duration: 1.2, repeat: Infinity }}
+                >
+                  ● ● ●
+                </motion.span>
+              ) : (
+                <TypewriterText text={text} onDone={onDone} />
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
