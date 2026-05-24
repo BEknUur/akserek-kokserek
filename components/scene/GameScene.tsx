@@ -22,6 +22,7 @@ import Subtitles from '@/components/ui/Subtitles'
 import Commentator from '@/components/ui/Commentator'
 import TeamSelect from '@/components/ui/TeamSelect'
 import GameOver from '@/components/ui/GameOver'
+import AiChat from '@/components/ui/AiChat'
 
 import { useGameStore } from '@/lib/store/gameStore'
 import { useGameLoop } from '@/lib/game/useGameLoop'
@@ -331,6 +332,8 @@ export default function GameScene() {
                      bg-black/30 hover:bg-black/50 px-3 py-1.5 rounded transition-colors pointer-events-auto">
           ← Басты бет
         </button>
+
+        {phase !== 'TEAM_SELECT' && phase !== 'GAME_OVER' && <AiChat />}
       </div>
 
       {/* Выбор команды */}
