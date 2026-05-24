@@ -132,7 +132,7 @@ export default function GameScene() {
       {/* Canvas */}
       <Canvas
         camera={{ position: [0, 8, 20], fov: 60 }}
-        shadows="soft"
+        shadows
         style={{ width: '100vw', height: '100vh', background: '#1a0a2e' }}
         gl={{ antialias: true, alpha: false }}
       >

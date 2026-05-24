@@ -157,7 +157,7 @@ export default function PreviewScene() {
   return (
     <Canvas
       camera={{ position: [0, 5, 16], fov: 55 }}
-      shadows="soft"
+      shadows
       style={{ width: '100%', height: '100%' }}
     >
       <ambientLight intensity={0.4} />
