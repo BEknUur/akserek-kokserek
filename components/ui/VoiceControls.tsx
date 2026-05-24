@@ -14,7 +14,7 @@ export default function VoiceControls() {
   } = useGameStore()
 
   return (
-    <div className="absolute top-14 left-4 z-40 flex items-center gap-3 rounded-lg border border-[var(--steppe-gold)]/35 bg-black/55 px-3 py-2 pointer-events-auto backdrop-blur">
+    <div className="absolute top-[116px] left-4 z-40 flex items-center gap-3 rounded-lg border border-[var(--steppe-gold)]/35 bg-black/55 px-3 py-2 pointer-events-auto backdrop-blur">
       <button
         type="button"
         onClick={() => setVoiceEnabled(!isVoiceEnabled)}
