@@ -459,9 +459,14 @@ export default function GameScene() {
         )}
 
         {/* Кнопка назад */}
-        <button onClick={() => router.push('/')}
-          className="absolute top-4 left-4 text-gray-500 hover:text-white text-xs font-body
-                     bg-black/30 hover:bg-black/50 px-3 py-1.5 rounded transition-colors pointer-events-auto">
+        <button
+          onClick={() => { resetGame(); router.push('/') }}
+          className="absolute top-[72px] left-4 z-[60] flex items-center gap-2
+                     bg-black/70 hover:bg-[var(--steppe-gold)] border border-[var(--steppe-gold)]/50
+                     hover:border-[var(--steppe-gold)] text-[var(--steppe-gold)] hover:text-black
+                     text-xs font-kazakh font-semibold tracking-wider uppercase
+                     px-4 py-2 rounded transition-all duration-200 pointer-events-auto shadow-lg"
+        >
           ← {t('game.backHome')}
         </button>
 

@@ -21,7 +21,7 @@ export default function MainNav() {
   return (
     <>
     <MobileNavbar />
-    <header className="fixed left-0 right-0 top-0 z-50 hidden px-3 pt-3 sm:px-6 lg:block">
+    <header className="fixed left-0 right-0 top-0 z-[60] hidden px-3 pt-3 sm:px-6 lg:block pointer-events-auto">
       <nav className="mx-auto flex max-w-7xl items-center justify-between gap-4 border border-[var(--steppe-gold)]/25 bg-[#080b14]/80 px-4 py-3 shadow-2xl shadow-black/30 backdrop-blur-xl sm:px-5">
         <Link href="/" className="group flex min-w-0 items-center gap-3" aria-label="Ақсерек-Көксерек">
           <span className="grid h-9 w-9 shrink-0 place-items-center border border-[var(--steppe-gold)] bg-[var(--steppe-gold)] text-[#080b14]">
