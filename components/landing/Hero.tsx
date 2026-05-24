@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import KazakhButton from '@/components/shared/KazakhButton'
 import KazakhOrnament from '@/components/shared/KazakhOrnament'
 import dynamic from 'next/dynamic'
+import { useGameStore } from '@/lib/store/gameStore'
 
 const PreviewScene = dynamic(() => import('@/components/scene/PreviewScene'), {
   ssr: false,
@@ -13,6 +14,12 @@ const PreviewScene = dynamic(() => import('@/components/scene/PreviewScene'), {
 
 export default function Hero() {
   const router = useRouter()
+  const setOpponentType = useGameStore((state) => state.setOpponentType)
+
+  const startGame = (opponentType: 'bot' | 'openai') => {
+    setOpponentType(opponentType)
+    router.push('/game')
+  }
 
   return (
     <div className="relative min-h-screen overflow-hidden pt-24">
@@ -71,8 +78,11 @@ export default function Hero() {
             transition={{ duration: 0.6, delay: 0.9 }}
             className="mt-9 flex flex-col gap-3 sm:flex-row sm:flex-wrap"
           >
-            <KazakhButton onClick={() => router.push('/game')} variant="primary">
-              Ойынды бастау
+            <KazakhButton onClick={() => startGame('bot')} variant="primary">
+              Обычная игра
+            </KazakhButton>
+            <KazakhButton onClick={() => startGame('openai')} variant="primary">
+              Играть с AI
             </KazakhButton>
             <KazakhButton onClick={() => router.push('/menu')} variant="secondary">
               Мәзір

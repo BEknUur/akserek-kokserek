@@ -42,11 +42,14 @@ export interface GameState {
   playerTeam: Team
   enemyTeam: Team
   round: number
+  opponentType: 'bot' | 'openai'
   currentRunner?: Player
   currentTarget?: { left: Player; right: Player }
   lastResult?: BreakthroughResult
   subtitleText: string
   commentaryText: string
   isCommentaryLoading: boolean
+  isAiThinking: boolean
+  aiCommentary: string
   highlights: string[]
 }

@@ -7,6 +7,7 @@ import { calculateBreakthrough, calculateDefense } from './breakthrough'
 import { aiChooseVictim, chooseDefenders } from './aiOpponent'
 import { checkWinCondition } from './stateMachine'
 import { Player } from '@/lib/store/types'
+import { getOpenAiMove, toOpenAiSafeGameState } from '@/lib/ai/openaiOpponent'
 
 export function useGameLoop() {
   const store = useGameStore()
@@ -76,22 +77,63 @@ export function useGameLoop() {
   }, []) // eslint-disable-line
 
   // ─── 5. BOT_CHOOSING → ENEMY_RUNS ───────────────────────────────────
-  const startBotTurn = useCallback(() => {
-    const { enemyTeam, playerTeam } = useGameStore.getState()
+  const startBotTurn = useCallback(async () => {
+    const { enemyTeam, playerTeam, opponentType, round, lastResult } = useGameStore.getState()
     if (enemyTeam.players.length < 2) { store.setPhase('GAME_OVER'); return }
 
-    // Бот выбирает своего лучшего атакующего
-    const botRunner = aiChooseVictim(playerTeam, enemyTeam) // он "атакует" нашу команду
-    // Бот выбирает gap в нашей цепи
-    const defenders = chooseDefenders(playerTeam)
+    let botRunner: Player
+    let defenders: { left: Player; right: Player }
+    let taunt = ''
+
+    if (opponentType === 'openai') {
+      store.setAiThinking(true)
+      store.setAiCommentary('')
+      store.setSubtitle('AI қарсылас ойланып жатыр...')
+      store.setPhase('BOT_CHOOSING')
+
+      try {
+        const move = await getOpenAiMove(toOpenAiSafeGameState({
+          round,
+          playerTeam,
+          enemyTeam,
+          lastResult,
+          difficulty: 'normal',
+        }))
+
+        const runner = enemyTeam.players.find(p => p.id === move.runnerId)
+        const leftIndex = playerTeam.players.findIndex(p => p.id === move.targetLeftId)
+        const rightIndex = playerTeam.players.findIndex(p => p.id === move.targetRightId)
+
+        if (!runner || leftIndex < 0 || rightIndex !== leftIndex + 1) {
+          throw new Error('OpenAI move references invalid player ids')
+        }
+
+        botRunner = runner
+        defenders = { left: playerTeam.players[leftIndex], right: playerTeam.players[rightIndex] }
+        taunt = move.taunt
+      } catch (error) {
+        console.warn('OpenAI opponent failed; falling back to bot logic', error)
+        botRunner = aiChooseVictim(playerTeam, enemyTeam) // он "атакует" нашу команду
+        defenders = chooseDefenders(playerTeam)
+      } finally {
+        store.setAiThinking(false)
+      }
+    } else {
+      // Бот выбирает своего лучшего атакующего
+      botRunner = aiChooseVictim(playerTeam, enemyTeam) // он "атакует" нашу команду
+      // Бот выбирает gap в нашей цепи
+      defenders = chooseDefenders(playerTeam)
+      store.setPhase('BOT_CHOOSING')
+    }
 
     store.setRunner(botRunner)
     store.setTarget(defenders.left, defenders.right)
-    store.setSubtitle(`${botRunner.name} атакует вашу цепь!`)
-    store.setPhase('BOT_CHOOSING')
+    store.setAiCommentary(taunt)
+    store.setSubtitle(taunt || `${botRunner.name} атакует вашу цепь!`)
 
     setTimeout(() => {
       store.setSubtitle('')
+      store.setAiCommentary('')
       store.setPhase('ENEMY_RUNS')  // → игрок жмёт ПРОБЕЛ для ЗАЩИТЫ
     }, 2000)
   }, []) // eslint-disable-line

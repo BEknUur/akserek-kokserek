@@ -140,6 +140,7 @@ export default function GameScene() {
   const {
     phase, playerTeam, enemyTeam, round,
     commentaryText, isCommentaryLoading, subtitleText,
+    isAiThinking, aiCommentary,
     currentRunner, currentTarget, lastResult,
   } = useGameStore()
   const store = useGameStore()
@@ -227,12 +228,31 @@ export default function GameScene() {
         {/* Субтитры */}
         <Subtitles text={subtitleText} />
 
+        {/* AI thinking indicator */}
+        {isAiThinking && (
+          <div className="absolute top-24 left-1/2 -translate-x-1/2 z-40">
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-lg border border-[var(--steppe-gold)]/45 bg-black/70 px-4 py-2 text-center shadow-xl"
+            >
+              <p className="font-kazakh text-sm text-[var(--steppe-gold)]">
+                AI қарсылас ойланып жатыр...
+              </p>
+              <p className="font-body text-xs text-white/60">AI думает...</p>
+            </motion.div>
+          </div>
+        )}
+
         {/* Комментатор */}
-        {commentaryText && (
+        {(commentaryText || aiCommentary) && (
           <Commentator
-            text={commentaryText}
+            text={commentaryText || aiCommentary}
             isLoading={isCommentaryLoading}
-            onDone={() => store.setCommentary('')}
+            onDone={() => {
+              store.setCommentary('')
+              store.setAiCommentary('')
+            }}
           />
         )}
 

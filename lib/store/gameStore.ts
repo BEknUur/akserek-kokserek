@@ -3,12 +3,15 @@ import { GameState, GamePhase, Player, Team, BreakthroughResult } from './types'
 
 interface GameStore extends GameState {
   setPhase: (phase: GamePhase) => void
+  setOpponentType: (type: 'bot' | 'openai') => void
   setTeams: (playerTeam: Team, enemyTeam: Team) => void
   setRunner: (runner: Player) => void
   setTarget: (left: Player, right: Player) => void
   setLastResult: (result: BreakthroughResult) => void
   setCommentary: (text: string, loading?: boolean) => void
   setSubtitle: (text: string) => void
+  setAiThinking: (isThinking: boolean) => void
+  setAiCommentary: (text: string) => void
   transferPlayer: (player: Player, toTeam: 'blue' | 'red') => void
   addHighlight: (event: string) => void
   resetGame: () => void
@@ -31,12 +34,15 @@ const initialState: GameState = {
   playerTeam: defaultPlayerTeam,
   enemyTeam: defaultEnemyTeam,
   round: 1,
+  opponentType: 'bot',
   currentRunner: undefined,
   currentTarget: undefined,
   lastResult: undefined,
   commentaryText: '',
   subtitleText: '',
   isCommentaryLoading: false,
+  isAiThinking: false,
+  aiCommentary: '',
   highlights: [],
 }
 
@@ -44,6 +50,8 @@ export const useGameStore = create<GameStore>((set) => ({
   ...initialState,
 
   setPhase: (phase) => set({ phase }),
+
+  setOpponentType: (type) => set({ opponentType: type }),
 
   setTeams: (playerTeam, enemyTeam) => set({ playerTeam, enemyTeam }),
 
@@ -57,6 +65,10 @@ export const useGameStore = create<GameStore>((set) => ({
     set({ commentaryText: text, isCommentaryLoading: loading }),
 
   setSubtitle: (text) => set({ subtitleText: text }),
+
+  setAiThinking: (isThinking) => set({ isAiThinking: isThinking }),
+
+  setAiCommentary: (text) => set({ aiCommentary: text }),
 
   transferPlayer: (player, toTeam) =>
     set((state) => {
