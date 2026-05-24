@@ -54,7 +54,7 @@ export function useGameLoop() {
     }, 2000)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── PLAYER_RUNS ────────────────────────────────────────────────────────
+  // ── PLAYER_RUNS: игрок нажал SPACE → считаем результат, запускаем анимацию
   const handlePlayerHit = useCallback((power: number) => {
     const { currentRunner, currentTarget } = useGameStore.getState()
     if (!currentRunner || !currentTarget) return
@@ -66,12 +66,20 @@ export function useGameLoop() {
       power
     )
     store.setLastResult(result)
+    // Переходим в анимационную фазу — Runner сам доиграет и вызовет onBreakthroughAnimDone
+    store.setPhase('BREAKTHROUGH_ANIM')
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Вызывается из Runner.tsx когда анимация прорыва/отскока завершена
+  const onBreakthroughAnimDone = useCallback(async () => {
+    const { currentRunner, currentTarget, lastResult } = useGameStore.getState()
+    if (!currentRunner || !currentTarget || !lastResult) return
+
     store.setPhase('RESULT')
 
-    // Читаем свежий стейт после установки результата
     const { enemyTeam, playerTeam } = useGameStore.getState()
 
-    if (result.success) {
+    if (lastResult.success) {
       const captured = enemyTeam.players.find((p) => p.id === currentTarget.left.id)
       if (captured) store.transferPlayer(captured, 'blue')
       store.addHighlight(`${currentRunner.name} жарып өтті!`)
@@ -87,12 +95,12 @@ export function useGameLoop() {
     )
 
     setTimeout(async () => {
-      const event = result.success ? 'successful_breakthrough' : 'failed_breakthrough'
+      const event = lastResult.success ? 'successful_breakthrough' : 'failed_breakthrough'
       const commentary = await getFallbackCommentary(event)
       store.setCommentary(commentary)
       store.setPhase('COMMENTARY')
       if (winner) setTimeout(() => store.setPhase('GAME_OVER'), 4000)
-    }, 2200)
+    }, 1500)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── COMMENTARY done ────────────────────────────────────────────────────
@@ -127,9 +135,9 @@ export function useGameLoop() {
     }, 2000)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── ENEMY_RUNS ─────────────────────────────────────────────────────────
+  // ── ENEMY_RUNS: симулируем и запускаем анимацию
   const simulateEnemyRun = useCallback(() => {
-    setTimeout(async () => {
+    setTimeout(() => {
       const { currentRunner, currentTarget } = useGameStore.getState()
       if (!currentRunner || !currentTarget) return
 
@@ -139,38 +147,55 @@ export function useGameLoop() {
         currentTarget.right
       )
       store.setLastResult(result)
-      store.setPhase('RESULT')
-
-      const { enemyTeam, playerTeam } = useGameStore.getState()
-
-      if (result.success) {
-        const captured = playerTeam.players.find((p) => p.id === currentTarget.left.id)
-        if (captured) store.transferPlayer(captured, 'red')
-        store.addHighlight(`${currentRunner.name} жарып өтті!`)
-      } else {
-        const runner = enemyTeam.players.find((p) => p.id === currentRunner.id)
-        if (runner) store.transferPlayer(runner, 'blue')
-        store.addHighlight(`${currentRunner.name} тоқтатылды!`)
-      }
-
-      const winner = checkWinCondition(
-        useGameStore.getState().playerTeam,
-        useGameStore.getState().enemyTeam
-      )
-
-      setTimeout(async () => {
-        const event = result.success ? 'enemy_fails' : 'team_winning'
-        const commentary = await getFallbackCommentary(event)
-        store.setCommentary(commentary)
-        store.setPhase('COMMENTARY')
-        if (winner) setTimeout(() => store.setPhase('GAME_OVER'), 4000)
-      }, 2200)
+      store.setPhase('BREAKTHROUGH_ANIM')
     }, 1800)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Вызывается из Runner.tsx когда анимация врага завершена
+  const onEnemyAnimDone = useCallback(async () => {
+    const { currentRunner, currentTarget, lastResult } = useGameStore.getState()
+    if (!currentRunner || !currentTarget || !lastResult) return
+
+    store.setPhase('RESULT')
+
+    const { enemyTeam, playerTeam } = useGameStore.getState()
+
+    if (lastResult.success) {
+      const captured = playerTeam.players.find((p) => p.id === currentTarget.left.id)
+      if (captured) store.transferPlayer(captured, 'red')
+      store.addHighlight(`${currentRunner.name} жарып өтті!`)
+    } else {
+      const runner = enemyTeam.players.find((p) => p.id === currentRunner.id)
+      if (runner) store.transferPlayer(runner, 'blue')
+      store.addHighlight(`${currentRunner.name} тоқтатылды!`)
+    }
+
+    const winner = checkWinCondition(
+      useGameStore.getState().playerTeam,
+      useGameStore.getState().enemyTeam
+    )
+
+    setTimeout(async () => {
+      const event = lastResult.success ? 'enemy_fails' : 'team_winning'
+      const commentary = await getFallbackCommentary(event)
+      store.setCommentary(commentary)
+      store.setPhase('COMMENTARY')
+      if (winner) setTimeout(() => store.setPhase('GAME_OVER'), 4000)
+    }, 1500)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const resetGame = useCallback(() => {
     store.resetGame()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  return { startGame, startEnemyCry, handlePlayerHit, onCommentaryDone, handlePlayerChooses, resetGame }
+  return {
+    startGame,
+    startEnemyCry,
+    handlePlayerHit,
+    onBreakthroughAnimDone,
+    onEnemyAnimDone,
+    onCommentaryDone,
+    handlePlayerChooses,
+    resetGame,
+  }
 }

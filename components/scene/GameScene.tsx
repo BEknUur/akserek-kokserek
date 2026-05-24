@@ -27,12 +27,16 @@ import { useGameLoop } from '@/lib/game/useGameLoop'
 
 // ─── 3D Сцена ────────────────────────────────────────────────────────────────
 
-function SceneContent() {
+function SceneContent({ onBreakthroughAnimDone, onEnemyAnimDone }: {
+  onBreakthroughAnimDone: () => void
+  onEnemyAnimDone: () => void
+}) {
   const { phase, playerTeam, enemyTeam, currentRunner, currentTarget, lastResult } = useGameStore()
 
-  const isRunning = phase === 'PLAYER_RUNS' || phase === 'ENEMY_RUNS'
-  const isResult  = phase === 'RESULT'
-  const chainBroken = isResult && !!lastResult?.success
+  const isRunning    = phase === 'PLAYER_RUNS' || phase === 'ENEMY_RUNS' || phase === 'BREAKTHROUGH_ANIM'
+  const chainBroken  = (phase === 'RESULT' || phase === 'BREAKTHROUGH_ANIM') && !!lastResult?.success
+  const isPlayerAnim = phase === 'BREAKTHROUGH_ANIM' && currentRunner?.team === 'blue'
+  const isEnemyAnim  = phase === 'BREAKTHROUGH_ANIM' && currentRunner?.team === 'red'
 
   return (
     <>
@@ -97,11 +101,14 @@ function SceneContent() {
         </>
       )}
 
-      {/* Бегун в движении */}
+      {/* Бегун в движении + анимация прорыва */}
       {currentRunner && isRunning && (
         <Runner
           runner={currentRunner}
           targetZ={currentRunner.team === 'blue' ? -4 : 4}
+          phase={phase}
+          success={lastResult?.success}
+          onAnimDone={isPlayerAnim ? onBreakthroughAnimDone : isEnemyAnim ? onEnemyAnimDone : undefined}
         />
       )}
 
@@ -128,6 +135,8 @@ export default function GameScene() {
   const {
     startGame,
     handlePlayerHit,
+    onBreakthroughAnimDone,
+    onEnemyAnimDone,
     onCommentaryDone,
     handlePlayerChooses,
     resetGame,
@@ -148,7 +157,10 @@ export default function GameScene() {
         gl={{ antialias: true, alpha: false }}
       >
         <Suspense fallback={null}>
-          <SceneContent />
+          <SceneContent
+            onBreakthroughAnimDone={onBreakthroughAnimDone}
+            onEnemyAnimDone={onEnemyAnimDone}
+          />
         </Suspense>
       </Canvas>
 

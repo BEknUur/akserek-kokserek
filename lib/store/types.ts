@@ -5,6 +5,7 @@ export type GamePhase =
   | 'ENEMY_CRY'
   | 'ENEMY_CHOOSES'
   | 'PLAYER_RUNS'
+  | 'BREAKTHROUGH_ANIM'   // промежуточная: анимация прорыва/отскока
   | 'RESULT'
   | 'COMMENTARY'
   | 'PLAYER_CHOOSES'
