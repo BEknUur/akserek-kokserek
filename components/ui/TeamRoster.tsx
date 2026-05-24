@@ -6,13 +6,12 @@ import PlayerCard from './PlayerCard'
 
 interface TeamRosterProps {
   team: Team
-  // При PLAYER_CHOOSES — игрок кликает на СВОЕГО игрока
-  // (указывает куда враг будет атаковать)
   isSelectable?: boolean
+  selectedId?: string     // выделить уже выбранного
   onSelect?: (player: Player) => void
 }
 
-export default function TeamRoster({ team, isSelectable, onSelect }: TeamRosterProps) {
+export default function TeamRoster({ team, isSelectable, selectedId, onSelect }: TeamRosterProps) {
   return (
     <motion.div
       initial={{ opacity: 0, x: -20 }}
@@ -35,6 +34,7 @@ export default function TeamRoster({ team, isSelectable, onSelect }: TeamRosterP
               key={p.id}
               player={p}
               size="sm"
+              isHighlighted={p.id === selectedId}
               isClickable={isSelectable}
               onClick={() => onSelect?.(p)}
             />

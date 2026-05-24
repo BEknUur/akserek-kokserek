@@ -39,11 +39,12 @@ export function useGameLoop() {
     store.setSubtitle(`«${victim.name}» — сені шақырады!`)
     setTimeout(() => {
       store.setSubtitle('')
-      const { enemyTeam: latest } = useGameStore.getState()
+      // Враг (victim) атакует нашу (playerTeam) цепь
+      const { playerTeam: latest } = useGameStore.getState()
       const defenders = chooseDefenders(latest)
       store.setRunner(victim)
       store.setTarget(defenders.left, defenders.right)
-      store.setPhase('PLAYER_RUNS')  // → игрок жмёт ПРОБЕЛ для атаки
+      store.setPhase('ENEMY_RUNS')  // → игрок жмёт ПРОБЕЛ для ЗАЩИТЫ
     }, 2000)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -89,26 +90,28 @@ export function useGameLoop() {
     store.setPhase('PLAYER_CHOOSES')
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── PLAYER_CHOOSES: кликаем на врага ─────────────────────────────────
-  const handlePlayerChooses = useCallback((targetPlayer: import('@/lib/store/types').Player) => {
-    const { playerTeam, enemyTeam } = useGameStore.getState()
-    const runner = [...enemyTeam.players].sort((a, b) => b.kush - a.kush)[0]
-    if (!runner) return
+  // ── PLAYER_CHOOSES: игрок выбрал своего бегуна и цель в enemy ────────
+  // ourRunner = наш игрок который побежит
+  // enemyTarget = враг между чьими соседями будем рвать
+  const handlePlayerChooses = useCallback((
+    ourRunner: import('@/lib/store/types').Player,
+    enemyTarget: import('@/lib/store/types').Player
+  ) => {
+    const { enemyTeam } = useGameStore.getState()
 
-    // Защитники из НАШЕЙ команды (по которым ударит враг)
-    const idx = playerTeam.players.findIndex(p => p.id === targetPlayer.id)
+    const idx = enemyTeam.players.findIndex(p => p.id === enemyTarget.id)
     const leftIdx  = Math.max(0, idx - 1)
-    const rightIdx = Math.min(playerTeam.players.length - 1, idx + 1)
+    const rightIdx = Math.min(enemyTeam.players.length - 1, idx + 1)
 
-    store.setRunner(runner)
-    store.setTarget(playerTeam.players[leftIdx], playerTeam.players[rightIdx])
+    store.setRunner(ourRunner)
+    store.setTarget(enemyTeam.players[leftIdx], enemyTeam.players[rightIdx])
 
     store.setPhase('ENEMY_CRY')
-    store.setSubtitle(`${runner.name}: «Жарып өтемін!»`)
+    store.setSubtitle(`${ourRunner.name}: «${enemyTarget.name}-ді жеңемін!»`)
 
     setTimeout(() => {
       store.setSubtitle('')
-      store.setPhase('ENEMY_RUNS')  // → игрок жмёт ПРОБЕЛ для защиты
+      store.setPhase('PLAYER_RUNS')  // → игрок жмёт ПРОБЕЛ для АТАКИ
     }, 2000)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 

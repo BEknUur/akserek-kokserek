@@ -1,21 +1,28 @@
 import { Player, BreakthroughResult } from '@/lib/store/types'
 
 /**
- * Атака: наш игрок бежит на вражескую цепь
- * timerHitPower 0–100 — точность попадания в BreakthroughBar
- * Успех: kush × точность × rand > chainStrength × 0.7
+ * АТАКА: наш игрок бежит на вражескую цепь
+ *
+ * Формула: attackPower = kush × (0.5 + accuracy × 0.6)
+ *   - даже 0% timing даёт 50% от силы (базовая инерция)
+ *   - 100% timing даёт 110% от силы (прыжок в момент удара)
+ *
+ * required = chainStrength × 0.55
+ *   - при kush=4, accuracy=75%: 4×0.95=3.8 vs 7×0.55=3.85 → на грани
+ *   - при kush=4, accuracy=90%: 4×1.04=4.16 > 3.85 → УСПЕХ
+ *   - при kush=7, accuracy=50%: 7×0.8=5.6 > 3.85 → лёгкий успех
  */
 export function calculateBreakthrough(
   runner: Player,
   leftDefender: Player,
   rightDefender: Player,
-  timerHitPower: number
+  timerHitPower: number   // 0–100 из BreakthroughBar
 ): BreakthroughResult {
   const chainStrength = (leftDefender.karsylyk + rightDefender.karsylyk) / 2
   const accuracy = timerHitPower / 100
-  const attackPower = runner.kush * accuracy
-  const randomFactor = 0.8 + Math.random() * 0.4
-  const required = chainStrength * 0.65
+  const attackPower = runner.kush * (0.5 + accuracy * 0.6)
+  const randomFactor = 0.85 + Math.random() * 0.3
+  const required = chainStrength * 0.55
   const success = attackPower * randomFactor > required
 
   return {
@@ -27,10 +34,11 @@ export function calculateBreakthrough(
 }
 
 /**
- * Защита: враг бежит на нашу цепь, мы жмём ПРОБЕЛ
- * timerHitPower 0–100 — точность защиты (DefenseBar)
- * Враг НЕ прорывается если: chainStrength × accuracy × rand > runner.kush × 0.65
- * То есть: success = true означает "цепь устояла" (мы успешно защитились)
+ * ЗАЩИТА: враг бежит, мы жмём ПРОБЕЛ чтобы удержать цепь
+ *
+ * defensePower = chainStrength × (0.5 + accuracy × 0.6)
+ * required = runner.kush × 0.55
+ * success = true → цепь устояла (враг пойман)
  */
 export function calculateDefense(
   runner: Player,
@@ -40,14 +48,13 @@ export function calculateDefense(
 ): BreakthroughResult {
   const chainStrength = (leftDefender.karsylyk + rightDefender.karsylyk) / 2
   const accuracy = timerHitPower / 100
-  const defensePower = chainStrength * accuracy
-  const randomFactor = 0.8 + Math.random() * 0.4
-  const required = runner.kush * 0.65
-  // success = true → мы успешно защитились (враг не прорвался)
+  const defensePower = chainStrength * (0.5 + accuracy * 0.6)
+  const randomFactor = 0.85 + Math.random() * 0.3
+  const required = runner.kush * 0.55
   const defended = defensePower * randomFactor > required
 
   return {
-    success: defended,   // true = chain held = runner captured
+    success: defended,
     power: Math.round(defensePower * randomFactor * 10),
     required: Math.round(required * 10),
     capturedPlayer: defended ? runner : leftDefender,

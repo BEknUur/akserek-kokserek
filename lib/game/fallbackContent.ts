@@ -64,15 +64,31 @@ function makeTeamFromProfile(
   return { name: teamName, players, color }
 }
 
+let generatingTeams = false  // guard против двойного вызова (StrictMode)
+
 // Генерирует обе команды из одного пула — нет дублей имён
 export async function getFallbackTeams(playerProfile: TeamProfile = 'balanced'): Promise<[Team, Team]> {
+  if (generatingTeams) {
+    // Вернём пустышку — guard сработал
+    return [
+      makeTeamFromProfile([], 'blue', 'Ақсерек', playerProfile),
+      makeTeamFromProfile([], 'red', 'Көксерек', 'balanced'),
+    ]
+  }
+  generatingTeams = true
+
   const names = await getNames()
-  const allNames = [...names.male, ...names.female]
+  // Убираем дубли из обоих списков перед объединением
+  const allNames = [...new Set([...names.male, ...names.female])]
   const shuffled = [...allNames].sort(() => Math.random() - 0.5)
 
+  const blueNames = shuffled.slice(0, 5)
+  const redNames  = shuffled.slice(5, 10)
+
+  generatingTeams = false
   return [
-    makeTeamFromProfile(shuffled.slice(0, 5), 'blue', 'Ақсерек', playerProfile),
-    makeTeamFromProfile(shuffled.slice(5, 10), 'red', 'Көксерек', 'balanced'),
+    makeTeamFromProfile(blueNames, 'blue', 'Ақсерек', playerProfile),
+    makeTeamFromProfile(redNames,  'red',  'Көксерек', 'balanced'),
   ]
 }
 

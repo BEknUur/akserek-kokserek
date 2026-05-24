@@ -3,7 +3,8 @@
 import { Canvas } from '@react-three/fiber'
 import { Sky, Environment } from '@react-three/drei'
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing'
-import { Suspense, useEffect } from 'react'
+import { Suspense, useEffect, useState } from 'react'
+import { Player } from '@/lib/store/types'
 import { useRouter } from 'next/navigation'
 
 import Steppe from './Steppe'
@@ -132,6 +133,14 @@ export default function GameScene() {
     resetGame,
   } = useGameLoop()
 
+  // 2-шаговый выбор атаки: сначала наш игрок, потом цель
+  const [pendingRunner, setPendingRunner] = useState<Player | null>(null)
+
+  // При смене фазы сбрасываем pendingRunner
+  useEffect(() => {
+    if (phase !== 'PLAYER_CHOOSES') setPendingRunner(null)
+  }, [phase])
+
   // При монтировании — показываем выбор команды
   useEffect(() => {
     store.setPhase('TEAM_SELECT')
@@ -160,25 +169,28 @@ export default function GameScene() {
         {/* Фаза + раунд */}
         {phase !== 'TEAM_SELECT' && <PhaseIndicator phase={phase} round={round} />}
 
-        {/* Наша команда — кликабельна при PLAYER_CHOOSES */}
+        {/* Наша команда — шаг 1: выбрать бегуна */}
         {playerTeam.players.length > 0 && (
           <div className={phase === 'PLAYER_CHOOSES' ? 'pointer-events-auto' : ''}>
             <TeamRoster
               team={playerTeam}
-              isSelectable={phase === 'PLAYER_CHOOSES'}
-              onSelect={handlePlayerChooses}
+              isSelectable={phase === 'PLAYER_CHOOSES' && !pendingRunner}
+              selectedId={pendingRunner?.id}
+              onSelect={(p) => setPendingRunner(p)}
             />
           </div>
         )}
 
-        {/* Команда врага */}
+        {/* Команда врага — шаг 2: выбрать цель (только после выбора своего) */}
         {enemyTeam.players.length > 0 && (
           <div className="pointer-events-auto">
             <EnemyRoster
               team={enemyTeam}
-              isSelectable={false}
+              isSelectable={phase === 'PLAYER_CHOOSES' && !!pendingRunner}
               highlightedId={currentTarget?.left.id}
-              onSelect={() => {}}
+              onSelect={(enemyTarget) => {
+                if (pendingRunner) handlePlayerChooses(pendingRunner, enemyTarget)
+              }}
             />
           </div>
         )}
@@ -213,13 +225,25 @@ export default function GameScene() {
           </div>
         )}
 
-        {/* PLAYER_CHOOSES оверлей */}
+        {/* PLAYER_CHOOSES — 2-шаговый оверлей */}
         {phase === 'PLAYER_CHOOSES' && (
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none z-30">
-            <div className="bg-black/70 border border-[var(--steppe-gold)]/60 rounded-2xl px-8 py-5 shadow-[0_0_40px_rgba(255,215,0,0.2)]">
-              <p className="font-title text-[var(--steppe-gold)] text-2xl mb-1">ЖАУДЫ ШАҚЫР!</p>
-              <p className="text-white text-sm font-body mb-1">Кімге жауды шақырасың?</p>
-              <p className="text-gray-400 text-xs font-body">← Сол жақтан өз ойыншыңды таңда</p>
+            <div className="bg-black/75 border border-[var(--steppe-gold)]/60 rounded-2xl px-8 py-5 shadow-[0_0_40px_rgba(255,215,0,0.2)]">
+              {!pendingRunner ? (
+                <>
+                  <p className="font-title text-[var(--steppe-gold)] text-xl mb-1">ШАГ 1: КІМ БАРАДЫ?</p>
+                  <p className="text-white text-sm font-body mb-1">Кто побежит ломать цепь?</p>
+                  <p className="text-blue-300 text-xs font-body">← Выбери своего игрока слева</p>
+                </>
+              ) : (
+                <>
+                  <p className="font-title text-[var(--steppe-gold)] text-xl mb-1">ШАГ 2: КІМГЕ?</p>
+                  <p className="text-white text-sm font-body mb-1">
+                    <span className="text-blue-300">{pendingRunner.name}</span> атакует — куда?
+                  </p>
+                  <p className="text-red-300 text-xs font-body">Выбери врага справа →</p>
+                </>
+              )}
             </div>
           </div>
         )}
