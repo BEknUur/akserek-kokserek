@@ -27,9 +27,12 @@ const currentLook = new THREE.Vector3(0, 0, 0)
 export default function CameraRig({ phase }: CameraRigProps) {
   const { camera } = useThree()
 
-  useFrame(() => {
+  useFrame((state) => {
     const cfg = CAMERA_CONFIG[phase] ?? DEFAULT
+    const breathing = Math.sin(state.clock.elapsedTime * 0.55) * 0.12
     targetPos.set(...cfg.pos)
+    targetPos.y += breathing
+    targetPos.x += Math.sin(state.clock.elapsedTime * 0.23) * 0.08
     targetLook.set(...cfg.look)
     camera.position.lerp(targetPos, 0.05)
     currentLook.lerp(targetLook, 0.05)

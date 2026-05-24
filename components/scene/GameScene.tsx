@@ -10,6 +10,13 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Steppe from './Steppe'
 import Yurt from './Yurt'
 import Eagle from './Eagle'
+import Altibakan from './Altibakan'
+import AmbientParticles from './AmbientParticles'
+import BackgroundMountains from './BackgroundMountains'
+import Campfire from './Campfire'
+import Cart from './Cart'
+import Horses from './Horses'
+import SteppeDecor from './SteppeDecor'
 import PlayerRow from './PlayerRow'
 import Chain from './Chain'
 import CameraRig from './CameraRig'
@@ -55,21 +62,31 @@ function SceneContent({ onPlayerAnimDone, onBotAnimDone }: {
 
   return (
     <>
-      <ambientLight intensity={0.35} color="#ffe4b5" />
-      <directionalLight position={[50, 30, -20]} intensity={2.5} color="#ff8c42" castShadow
+      <fog attach="fog" args={['#c07a45', 36, 118]} />
+      <ambientLight intensity={0.28} color="#ffe2b3" />
+      <hemisphereLight color="#ffcf8a" groundColor="#314a32" intensity={0.55} />
+      <directionalLight position={[50, 24, -36]} intensity={3.0} color="#ff8c42" castShadow
         shadow-mapSize={[2048, 2048]} shadow-camera-far={100}
         shadow-camera-left={-20} shadow-camera-right={20}
         shadow-camera-top={20} shadow-camera-bottom={-20} />
-      <directionalLight position={[-20, 15, 20]} intensity={0.4} color="#4a7abf" />
+      <directionalLight position={[-24, 14, 18]} intensity={0.55} color="#5c8ad8" />
 
       <Sky sunPosition={[100, 8, -100]} turbidity={10} rayleigh={4}
            mieCoefficient={0.005} mieDirectionalG={0.8} inclination={0.49} azimuth={0.25} />
       <Environment preset="sunset" />
 
+      <BackgroundMountains />
       <Steppe />
-      <Yurt position={[-22, -1, -28]} scale={1.2} />
-      <Yurt position={[18, -1, -35]} scale={0.9} />
-      <Yurt position={[-10, -1, -40]} scale={0.7} />
+      <Yurt position={[-24, -1, -29]} scale={1.18} />
+      <Yurt position={[18, -1, -33]} scale={0.95} />
+      <Yurt position={[-8, -1, -42]} scale={0.72} />
+      <Yurt position={[31, -1, -36]} scale={0.62} />
+      <Altibakan />
+      <Cart />
+      <Campfire />
+      <Horses />
+      <SteppeDecor />
+      <AmbientParticles />
       <Eagle />
 
       {/* Наша шеренга (синие) */}

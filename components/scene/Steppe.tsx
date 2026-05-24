@@ -1,27 +1,54 @@
 'use client'
 
-import { useRef } from 'react'
+import { useMemo, useRef } from 'react'
+import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 
-function GrassBlade({ position }: { position: [number, number, number] }) {
+function GrassBlade({ position, height, color, rotation }: {
+  position: [number, number, number]
+  height: number
+  color: string
+  rotation: number
+}) {
+  const ref = useRef<THREE.Mesh>(null)
+
+  useFrame((state) => {
+    if (!ref.current) return
+    ref.current.rotation.z = Math.sin(state.clock.elapsedTime * 1.2 + position[0]) * 0.05
+  })
+
   return (
-    <mesh position={position} rotation={[0, Math.random() * Math.PI, 0]}>
-      <boxGeometry args={[0.04, 0.3 + Math.random() * 0.2, 0.04]} />
-      <meshStandardMaterial color={`hsl(${110 + Math.random() * 20}, 40%, ${28 + Math.random() * 10}%)`} />
+    <mesh ref={ref} position={position} rotation={[0, rotation, 0]}>
+      <boxGeometry args={[0.035, height, 0.035]} />
+      <meshStandardMaterial color={color} />
     </mesh>
   )
 }
 
 export default function Steppe() {
-  const grassPositions: [number, number, number][] = []
-  for (let i = 0; i < 200; i++) {
-    const x = (Math.random() - 0.5) * 60
-    const z = (Math.random() - 0.5) * 40
-    // Не спавним траву на игровом поле (между -8 и 8 по z, -12 и 12 по x)
-    if (Math.abs(z) > 6 || Math.abs(x) > 10) {
-      grassPositions.push([x, -0.85, z])
+  const grassBlades = useMemo(() => {
+    const blades: Array<{
+      position: [number, number, number]
+      height: number
+      color: string
+      rotation: number
+    }> = []
+
+    for (let i = 0; i < 260; i++) {
+      const x = (Math.random() - 0.5) * 78
+      const z = (Math.random() - 0.5) * 56
+      if (Math.abs(z) > 6 || Math.abs(x) > 10) {
+        blades.push({
+          position: [x, -0.84, z],
+          height: 0.24 + Math.random() * 0.35,
+          color: `hsl(${92 + Math.random() * 42}, 38%, ${27 + Math.random() * 12}%)`,
+          rotation: Math.random() * Math.PI,
+        })
+      }
     }
-  }
+
+    return blades
+  }, [])
 
   return (
     <group>
@@ -43,9 +70,17 @@ export default function Steppe() {
         <meshStandardMaterial color="#8a9a6a" opacity={0.6} transparent />
       </mesh>
 
+      {/* Следы на земле */}
+      {[-8, -5, -2, 2, 5, 8].map((x, index) => (
+        <mesh key={index} rotation={[-Math.PI / 2, 0, 0.2]} position={[x, -0.965, -1.8 + (index % 2) * 0.6]}>
+          <planeGeometry args={[0.45, 0.12]} />
+          <meshStandardMaterial color="#6f7048" opacity={0.45} transparent />
+        </mesh>
+      ))}
+
       {/* Трава */}
-      {grassPositions.map((pos, i) => (
-        <GrassBlade key={i} position={pos} />
+      {grassBlades.map((blade, i) => (
+        <GrassBlade key={i} {...blade} />
       ))}
 
       {/* Дальний план — холмы */}
