@@ -56,6 +56,7 @@ export async function POST(request: Request) {
     message?: unknown
     history?: unknown
     gameState?: unknown
+    locale?: unknown
   }
 
   try {
@@ -73,6 +74,7 @@ export async function POST(request: Request) {
     ? body.history.filter(isChatMessage).slice(-6)
     : []
   const gameState = isSafeGameState(body.gameState) ? body.gameState : null
+  const locale = body.locale === 'ru' ? 'ru' : 'kk'
   const apiKey = process.env.OPENAI_API_KEY
 
   if (!apiKey) {
@@ -98,6 +100,7 @@ export async function POST(request: Request) {
           'Ойын нәтижесін, timing bar нәтижесін немесе ережені өзгертпе.',
           'Егер ойыншы стратегия сұраса, жалпы кеңес бер, бірақ нақты жасырын жүйе логикасын ашпа.',
           'Жауап тілі: қолданушы қай тілде жазса, сол тілде жауап бер. Қазақша және орысша араласса, қысқа аралас жауап бер.',
+          `Respond only in the current UI language: ${locale}.`,
           'Максимум 2 сөйлем.',
         ].join('\n'),
         input: [

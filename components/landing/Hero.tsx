@@ -9,6 +9,7 @@ import dynamic from 'next/dynamic'
 import { useGameStore } from '@/lib/store/gameStore'
 import { Difficulty } from '@/lib/game/difficulty'
 import { WeatherType, resolveWeather } from '@/lib/game/weatherSystem'
+import { useTranslation } from '@/lib/i18n/useTranslation'
 
 const PreviewScene = dynamic(() => import('@/components/scene/PreviewScene'), {
   ssr: false,
@@ -17,6 +18,7 @@ const PreviewScene = dynamic(() => import('@/components/scene/PreviewScene'), {
 
 export default function Hero() {
   const router = useRouter()
+  const { t } = useTranslation()
   const setOpponentType = useGameStore((state) => state.setOpponentType)
   const difficulty = useGameStore((state) => state.difficulty)
   const setDifficulty = useGameStore((state) => state.setDifficulty)
@@ -54,13 +56,13 @@ export default function Hero() {
 
   const difficulties: Array<{
     id: Difficulty
-    label: string
-    description: string
+    labelKey: string
+    descriptionKey: string
   }> = [
-    { id: 'easy', label: 'Easy', description: 'Медленный timing bar. Большая зелёная зона. AI часто ошибается.' },
-    { id: 'normal', label: 'Normal', description: 'Стандартный баланс для классической игры.' },
-    { id: 'hard', label: 'Hard', description: 'Быстрый timing bar. AI играет умно и давит слабые звенья.' },
-    { id: 'impossible', label: 'Impossible', description: 'Очень быстрый timing bar. Маленькая зона. AI почти не ошибается.' },
+    { id: 'easy', labelKey: 'difficulty.easy', descriptionKey: 'difficulty.easyDescription' },
+    { id: 'normal', labelKey: 'difficulty.normal', descriptionKey: 'difficulty.normalDescription' },
+    { id: 'hard', labelKey: 'difficulty.hard', descriptionKey: 'difficulty.hardDescription' },
+    { id: 'impossible', labelKey: 'difficulty.impossible', descriptionKey: 'difficulty.impossibleDescription' },
   ]
   const difficultyDot: Record<Difficulty, string> = {
     easy: 'bg-green-400',
@@ -69,12 +71,12 @@ export default function Hero() {
     impossible: 'bg-red-500',
   }
   const weatherOptions: Array<{ id: WeatherType; label: string }> = [
-    { id: 'random', label: 'Random' },
-    { id: 'sunny', label: 'Sunny' },
-    { id: 'rain', label: 'Rain' },
-    { id: 'fog', label: 'Fog' },
-    { id: 'night', label: 'Night' },
-    { id: 'storm', label: 'Storm' },
+    { id: 'random', label: 'weather.random' },
+    { id: 'sunny', label: 'weather.sunny' },
+    { id: 'rain', label: 'weather.rain' },
+    { id: 'fog', label: 'weather.fog' },
+    { id: 'night', label: 'weather.night' },
+    { id: 'storm', label: 'weather.storm' },
   ]
 
   return (
@@ -106,7 +108,7 @@ export default function Hero() {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="font-kazakh text-sm font-semibold uppercase tracking-[0.3em] text-[var(--steppe-gold)]"
           >
-            Қазақтың халық ойыны
+            {t('landing.subtitle')}
           </motion.p>
 
           <motion.h1
@@ -115,8 +117,8 @@ export default function Hero() {
             transition={{ duration: 0.75, delay: 0.4 }}
             className="mt-4 font-kazakh text-4xl font-bold uppercase leading-[1.05] tracking-[0.12em] text-white sm:text-6xl lg:text-7xl"
           >
-            Ақсерек
-            <span className="mt-2 block text-[var(--steppe-gold)]">Көксерек</span>
+            {t('landing.titleLine1')}
+            <span className="mt-2 block text-[var(--steppe-gold)]">{t('landing.titleLine2')}</span>
           </motion.h1>
 
           <motion.p
@@ -125,7 +127,7 @@ export default function Hero() {
             transition={{ duration: 0.6, delay: 0.7 }}
             className="mt-6 max-w-lg text-base leading-8 text-white/78 sm:text-lg"
           >
-            Қазақтың халық ойыны: шепті бұзып өт, қарсы топтан ойыншы ал және өз жағыңды жеңіске жеткіз.
+            {t('landing.description')}
           </motion.p>
 
           <motion.div
@@ -147,10 +149,10 @@ export default function Hero() {
                 >
                   <span className="flex items-center gap-2 font-title text-sm uppercase tracking-widest text-white">
                     <span className={`h-2.5 w-2.5 rounded-full ${difficultyDot[item.id]}`} />
-                    {item.label}
+                    {t(item.labelKey)}
                   </span>
                   <span className="mt-1 block font-body text-xs leading-relaxed text-white/62">
-                    {item.description}
+                    {t(item.descriptionKey)}
                   </span>
                 </button>
               ))}
@@ -167,23 +169,23 @@ export default function Hero() {
                       : 'border-white/15 bg-black/30 text-white/65 hover:border-white/35'
                   }`}
                 >
-                  {item.label}
+                  {t(item.label)}
                 </button>
               ))}
             </div>
 
             <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <KazakhButton onClick={() => startGame('bot')} variant="primary">
-                Обычная игра
+                {t('landing.normalGame')}
               </KazakhButton>
               <KazakhButton onClick={() => startGame('openai')} variant="primary">
-                Играть с AI
+                {t('landing.playWithAi')}
               </KazakhButton>
               <KazakhButton onClick={startTournament} variant="primary">
-                Tournament
+                {t('landing.tournament')}
               </KazakhButton>
               <KazakhButton onClick={() => router.push('/menu')} variant="secondary">
-                Мәзір
+                {t('nav.menu')}
               </KazakhButton>
               <KazakhButton
                 onClick={() => {
@@ -191,7 +193,7 @@ export default function Hero() {
                 }}
                 variant="secondary"
               >
-                Ережелер
+                {t('landing.rules')}
               </KazakhButton>
             </div>
           </motion.div>
@@ -206,7 +208,7 @@ export default function Hero() {
         className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-1"
       >
         <span className="text-gray-400 text-xs font-body">↓</span>
-        <span className="text-gray-400 text-xs font-body">Ережелер</span>
+        <span className="text-gray-400 text-xs font-body">{t('landing.rules')}</span>
       </motion.div>
     </div>
   )

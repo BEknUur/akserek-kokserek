@@ -1,8 +1,9 @@
 import { Player, Team } from '@/lib/store/types'
+import { Locale, defaultLocale } from '@/lib/i18n/types'
 
 let namesCache: { male: string[]; female: string[] } | null = null
-let criesCache: { cry_kz: string; cry_ru: string }[] | null = null
-let commentariesCache: Record<string, string[]> | null = null
+const criesCache: Partial<Record<Locale, { cry_kz: string; cry_ru: string }[]>> = {}
+const commentariesCache: Partial<Record<Locale, Record<string, string[]>>> = {}
 
 async function getNames() {
   if (!namesCache) {
@@ -12,20 +13,20 @@ async function getNames() {
   return namesCache!
 }
 
-async function getCries() {
-  if (!criesCache) {
-    const res = await fetch('/ai-content/cries.json')
-    criesCache = await res.json()
+async function getCries(locale: Locale = defaultLocale) {
+  if (!criesCache[locale]) {
+    const res = await fetch(`/ai-content/cries.${locale}.json`)
+    criesCache[locale] = await res.json()
   }
-  return criesCache!
+  return criesCache[locale]!
 }
 
-async function getCommentaries() {
-  if (!commentariesCache) {
-    const res = await fetch('/ai-content/commentaries.json')
-    commentariesCache = await res.json()
+async function getCommentaries(locale: Locale = defaultLocale) {
+  if (!commentariesCache[locale]) {
+    const res = await fetch(`/ai-content/commentaries.${locale}.json`)
+    commentariesCache[locale] = await res.json()
   }
-  return commentariesCache!
+  return commentariesCache[locale]!
 }
 
 function pick<T>(arr: T[]): T {
@@ -95,14 +96,14 @@ export async function getFallbackTeams(playerProfile: TeamProfile = 'balanced'):
 export { PROFILES }
 export type { TeamProfile as TProfile }
 
-export async function getFallbackCry(): Promise<{ cry_kz: string; cry_ru: string }> {
-  const cries = await getCries()
+export async function getFallbackCry(locale: Locale = defaultLocale): Promise<{ cry_kz: string; cry_ru: string }> {
+  const cries = await getCries(locale)
   return pick(cries)
 }
 
-export async function getFallbackCommentary(event: string): Promise<string> {
-  const comms = await getCommentaries()
+export async function getFallbackCommentary(event: string, locale: Locale = defaultLocale): Promise<string> {
+  const comms = await getCommentaries(locale)
   const list = comms[event]
   if (list?.length) return pick(list)
-  return 'Жарайсың, балам!'
+  return locale === 'kk' ? 'Жарайсың, балам!' : 'Молодец, сынок!'
 }

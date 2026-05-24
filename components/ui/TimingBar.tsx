@@ -6,6 +6,7 @@ import { Player } from '@/lib/store/types'
 import { useGameStore } from '@/lib/store/gameStore'
 import { DIFFICULTY_CONFIG } from '@/lib/game/difficulty'
 import { WEATHER_CONFIG, resolveWeather } from '@/lib/game/weatherSystem'
+import { useTranslation } from '@/lib/i18n/useTranslation'
 
 export type TimingMode = 'attack' | 'defense'
 
@@ -18,6 +19,7 @@ interface TimingBarProps {
 }
 
 export default function TimingBar({ mode, runner, leftDefender, rightDefender, onHit }: TimingBarProps) {
+  const { t } = useTranslation()
   const difficulty = useGameStore((state) => state.difficulty)
   const weather = useGameStore((state) => state.weather)
   const config = DIFFICULTY_CONFIG[difficulty]
@@ -88,9 +90,9 @@ export default function TimingBar({ mode, runner, leftDefender, rightDefender, o
   const inGreen = cursorPos >= greenStart && cursorPos <= greenStart + greenWidth
 
   const accentColor = isAttack ? 'var(--steppe-gold)' : '#f87171'
-  const flashText   = isAttack ? 'ЖАРЫП ӨТ!'  : 'ЦЕП ҰСТА!'
-  const flashSub    = isAttack ? `${runner.name} бежит на цепь!` : `${runner.name} атакует нашу цепь!`
-  const barLabel    = isAttack ? `${runner.name} атакует!` : `Защити цепь от ${runner.name}!`
+  const flashText   = isAttack ? t('game.breakthrough')  : t('game.holdChain')
+  const flashSub    = isAttack ? `${runner.name} ${t('game.attacksChain')}` : `${t('game.protectFrom')} ${runner.name}!`
+  const barLabel    = isAttack ? `${runner.name}: ${t('game.attack')}` : `${t('game.protectFrom')} ${runner.name}!`
 
   return (
     <>
@@ -121,12 +123,12 @@ export default function TimingBar({ mode, runner, leftDefender, rightDefender, o
             {barLabel}
           </span>
           <p className="text-white text-sm font-body mt-1.5 bg-black/60 inline-block px-3 py-1 rounded-full">
-            Нажми{' '}
+            {t('game.tap')}{' '}
             <kbd className="px-2 py-0.5 rounded font-mono font-bold text-black"
                  style={{ background: accentColor }}>
-              ПРОБЕЛ
+              {t('game.pressSpace').replace('Нажми ', '').replace(' бас', '')}
             </kbd>{' '}
-            в <span className="font-semibold" style={{ color: '#4ade80' }}>зелёной зоне</span>!
+            <span className="font-semibold" style={{ color: '#4ade80' }}>{t('game.inGreenZone')}</span>!
           </p>
         </div>
 
@@ -146,7 +148,7 @@ export default function TimingBar({ mode, runner, leftDefender, rightDefender, o
             className="absolute top-1/2 -translate-y-1/2 text-green-200 text-[10px] font-bold pointer-events-none"
             style={{ left: `${greenStart + greenWidth / 2}%`, transform: 'translateX(-50%) translateY(-50%)' }}
           >
-            {isAttack ? '✓ СЮДА' : '🛡 ДЕРЖИ'}
+            {isAttack ? '✓' : '🛡'}
           </div>
 
           {/* Курсор */}
@@ -166,15 +168,15 @@ export default function TimingBar({ mode, runner, leftDefender, rightDefender, o
         <div className="flex justify-between mt-2 text-xs text-gray-400 font-body px-1">
           {isAttack ? (
             <>
-              <span>⚡ Атака: <span className="text-blue-400 font-semibold">{runner.kush}</span></span>
-              <span>🛡 Цепь: <span className="text-red-400">{leftDefender.name} + {rightDefender.name}</span></span>
-              <span>🛡 Сила: <span className="text-red-400 font-semibold">{Math.round(chainAvg)}</span></span>
+              <span>⚡ {t('game.attackPower')}: <span className="text-blue-400 font-semibold">{runner.kush}</span></span>
+              <span>🛡 {t('game.chain')}: <span className="text-red-400">{leftDefender.name} + {rightDefender.name}</span></span>
+              <span>🛡 {t('game.strength')}: <span className="text-red-400 font-semibold">{Math.round(chainAvg)}</span></span>
             </>
           ) : (
             <>
-              <span>⚡ Бот: <span className="text-red-400 font-semibold">{runner.kush}</span></span>
-              <span>🛡 Ваша цепь: <span className="text-blue-400">{leftDefender.name} + {rightDefender.name}</span></span>
-              <span>🛡 Защита: <span className="text-blue-400 font-semibold">{Math.round(chainAvg)}</span></span>
+              <span>⚡ {t('game.bot')}: <span className="text-red-400 font-semibold">{runner.kush}</span></span>
+              <span>🛡 {t('game.yourChain')}: <span className="text-blue-400">{leftDefender.name} + {rightDefender.name}</span></span>
+              <span>🛡 {t('game.defensePower')}: <span className="text-blue-400 font-semibold">{Math.round(chainAvg)}</span></span>
             </>
           )}
         </div>

@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { Team, Player } from '@/lib/store/types'
 import PlayerCard from './PlayerCard'
+import { useTranslation } from '@/lib/i18n/useTranslation'
 
 interface EnemyRosterProps {
   team: Team
@@ -17,6 +18,8 @@ export default function EnemyRoster({
   highlightedId,
   onSelect,
 }: EnemyRosterProps) {
+  const { t } = useTranslation()
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -26,13 +29,13 @@ export default function EnemyRoster({
       <div className={`bg-[var(--ui-bg)] border rounded-lg p-2 ${isSelectable ? 'border-[var(--steppe-gold)]/60' : 'border-red-500/40'}`}>
         <div className="flex items-center justify-between mb-2">
           <p className="font-title text-red-400 text-xs tracking-wider">
-            {team.name}
+            {team.color === 'red' ? t('teams.kokserek') : team.name}
           </p>
           <span className="text-gray-400 text-xs font-body">{team.players.length}</span>
         </div>
         {isSelectable && (
           <p className="text-[var(--steppe-gold)] text-[10px] font-body mb-1.5 text-center">
-            ↓ Выбери кого вызвать
+            ↓ {t('game.chooseEnemyTarget')}
           </p>
         )}
         <div className="flex flex-col gap-1">

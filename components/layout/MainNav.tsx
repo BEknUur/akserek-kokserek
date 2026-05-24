@@ -3,30 +3,33 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import KazakhOrnament from '@/components/shared/KazakhOrnament'
+import LanguageSwitcher from '@/components/i18n/LanguageSwitcher'
+import { useTranslation } from '@/lib/i18n/useTranslation'
 
 const links = [
-  { href: '/', label: 'Басты бет' },
-  { href: '/menu', label: 'Мәзір' },
-  { href: '/game', label: 'Ойын' },
-  { href: '/#rules', label: 'Ережелер' },
+  { href: '/', labelKey: 'nav.home' },
+  { href: '/menu', labelKey: 'nav.menu' },
+  { href: '/game', labelKey: 'nav.game' },
+  { href: '/#rules', labelKey: 'nav.rules' },
 ]
 
 export default function MainNav() {
   const pathname = usePathname()
+  const { t } = useTranslation()
 
   return (
     <header className="fixed left-0 right-0 top-0 z-50 px-3 pt-3 sm:px-6">
       <nav className="mx-auto flex max-w-7xl items-center justify-between gap-4 border border-[var(--steppe-gold)]/25 bg-[#080b14]/80 px-4 py-3 shadow-2xl shadow-black/30 backdrop-blur-xl sm:px-5">
-        <Link href="/" className="group flex min-w-0 items-center gap-3" aria-label="Ақсерек-Көксерек басты бет">
+        <Link href="/" className="group flex min-w-0 items-center gap-3" aria-label="Ақсерек-Көксерек">
           <span className="grid h-9 w-9 shrink-0 place-items-center border border-[var(--steppe-gold)] bg-[var(--steppe-gold)] text-[#080b14]">
             <span className="h-4 w-4 rotate-45 border-2 border-[#080b14]" />
           </span>
           <span className="min-w-0">
             <span className="block truncate font-kazakh text-sm font-bold uppercase tracking-[0.22em] text-white">
-              Ақсерек
+              {t('teams.akserek')}
             </span>
             <span className="block truncate font-kazakh text-xs uppercase tracking-[0.2em] text-[var(--steppe-gold)]">
-              Көксерек
+              {t('teams.kokserek')}
             </span>
           </span>
         </Link>
@@ -49,10 +52,11 @@ export default function MainNav() {
                     : 'text-white/75 hover:bg-white/10 hover:text-white'
                 }`}
               >
-                {link.label}
+                {t(link.labelKey)}
               </Link>
             )
           })}
+          <LanguageSwitcher />
         </div>
       </nav>
     </header>

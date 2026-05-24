@@ -1,6 +1,7 @@
 import { Difficulty } from '@/lib/game/difficulty'
 import { WeatherType } from '@/lib/game/weatherSystem'
 import { GameMode, TournamentStage } from '@/lib/game/tournament'
+import { Locale } from '@/lib/i18n/types'
 
 export type GamePhase =
   | 'LANDING'
@@ -44,6 +45,7 @@ export interface BreakthroughResult {
 
 export interface GameState {
   phase: GamePhase
+  locale: Locale
   playerTeam: Team
   enemyTeam: Team
   round: number

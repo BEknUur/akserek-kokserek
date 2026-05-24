@@ -1,8 +1,10 @@
 'use client'
 
 import { useGameStore } from '@/lib/store/gameStore'
+import { useTranslation } from '@/lib/i18n/useTranslation'
 
 export default function VoiceControls() {
+  const { t } = useTranslation()
   const {
     isVoiceEnabled,
     volume,
@@ -18,7 +20,7 @@ export default function VoiceControls() {
         onClick={() => setVoiceEnabled(!isVoiceEnabled)}
         className="rounded border border-[var(--steppe-gold)]/45 px-2 py-1 font-body text-xs text-[var(--steppe-gold)] transition-colors hover:bg-[var(--steppe-gold)]/10"
       >
-        {isVoiceEnabled ? 'Mute' : 'Unmute'}
+        {isVoiceEnabled ? t('game.mute') : t('game.unmute')}
       </button>
 
       <input
@@ -34,7 +36,7 @@ export default function VoiceControls() {
 
       {isSpeaking && isVoiceEnabled && (
         <span className="whitespace-nowrap font-kazakh text-xs text-white/80">
-          🎤 AI сөйлеп жатыр...
+          🎤 {t('game.speaking')}
         </span>
       )}
     </div>

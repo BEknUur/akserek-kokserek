@@ -17,6 +17,7 @@ export default function VoiceNarrator() {
     commentaryText,
     aiCommentary,
     enemyTeam,
+    locale,
     isVoiceEnabled,
     volume,
     setSpeaking,
@@ -85,8 +86,8 @@ export default function VoiceNarrator() {
 
     if (phase === 'GAME_OVER') {
       text = enemyTeam.players.length <= 1
-        ? 'Жеңіс! Ақсерек бүгін дала төсінде мерейін асырды!'
-        : 'Жеңіліс. Бірақ шеп қайта құрылады, рух сынбайды.'
+        ? locale === 'kk' ? 'Жеңіс! Ақсерек бүгін дала төсінде мерейін асырды!' : 'Победа! Аксерек сегодня прославил степь!'
+        : locale === 'kk' ? 'Жеңіліс. Бірақ шеп қайта құрылады, рух сынбайды.' : 'Поражение. Но цепь будет собрана вновь, дух не сломлен.'
     }
 
     async function speakResult() {
@@ -123,7 +124,7 @@ export default function VoiceNarrator() {
     return () => {
       cancelled = true
     }
-  }, [phase, lastResult, enemyTeam.players.length, isVoiceEnabled, volume, setSpeaking])
+  }, [phase, lastResult, enemyTeam.players.length, locale, isVoiceEnabled, volume, setSpeaking])
 
   return null
 }

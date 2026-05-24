@@ -31,21 +31,21 @@ export function useGameLoop() {
   // ─── 2. PLAYER_CHOOSES → PLAYER_RUNS ────────────────────────────────
   // Игрок выбрал своего бегуна и gap во вражеской цепи
   const handlePlayerAttackChoice = useCallback((ourRunner: Player, enemyGapTarget: Player) => {
-    const { enemyTeam } = useGameStore.getState()
+    const { enemyTeam, locale } = useGameStore.getState()
     const idx = enemyTeam.players.findIndex(p => p.id === enemyGapTarget.id)
     // Защитники — соседи выбранного (они держат цепь слева и справа)
     const li = Math.max(0, idx - 1)
     const ri = Math.min(enemyTeam.players.length - 1, idx + 1)
     store.setRunner(ourRunner)
     store.setTarget(enemyTeam.players[li], enemyTeam.players[ri])
-    store.setSubtitle(`${ourRunner.name} бежит на цепь!`)
+    store.setSubtitle(locale === 'kk' ? `${ourRunner.name} шепке жүгіреді!` : `${ourRunner.name} бежит на цепь!`)
     setTimeout(() => store.setSubtitle(''), 1500)
     store.setPhase('PLAYER_RUNS')
   }, []) // eslint-disable-line
 
   // ─── 3. PLAYER_RUNS: игрок нажал SPACE (атака) ──────────────────────
   const handleAttackTimingHit = useCallback((power: number, hitGreen: boolean) => {
-    const { currentRunner, currentTarget, difficulty } = useGameStore.getState()
+    const { currentRunner, currentTarget, difficulty, locale } = useGameStore.getState()
     if (!currentRunner || !currentTarget) return
     const aiDefenseMistake = !simulateAiTiming(difficulty)
     const perfectStrikeWindow = {
@@ -60,7 +60,8 @@ export function useGameLoop() {
       currentTarget.left,
       currentTarget.right,
       power,
-      hitGreen && (aiDefenseMistake || perfectStrike)
+      hitGreen && (aiDefenseMistake || perfectStrike),
+      locale
     )
     store.setLastResult(result)
     store.setPhase('BREAKTHROUGH_ANIM')
@@ -68,7 +69,7 @@ export function useGameLoop() {
 
   // ─── 4. Анимация атаки завершена → применяем результат ──────────────
   const onPlayerAnimDone = useCallback(async () => {
-    const { currentRunner, currentTarget, lastResult } = useGameStore.getState()
+    const { currentRunner, currentTarget, lastResult, locale } = useGameStore.getState()
     if (!currentRunner || !currentTarget || !lastResult) return
 
     store.setPhase('RESULT')
@@ -88,7 +89,7 @@ export function useGameLoop() {
     const winner = checkWinCondition(pt, et)
 
     const event = lastResult.success ? 'successful_breakthrough' : 'failed_breakthrough'
-    const commentary = await getFallbackCommentary(event)
+    const commentary = await getFallbackCommentary(event, locale)
     store.setCommentary(commentary)
     const taunt = getAiTaunt({ result: lastResult, playerTeam: pt, enemyTeam: et, difficulty })
     store.setTauntText(taunt)
@@ -116,7 +117,7 @@ export function useGameLoop() {
 
   // ─── 5. BOT_CHOOSING → ENEMY_RUNS ───────────────────────────────────
   const startBotTurn = useCallback(async () => {
-    const { enemyTeam, playerTeam, opponentType, round, lastResult, difficulty } = useGameStore.getState()
+    const { enemyTeam, playerTeam, opponentType, round, lastResult, difficulty, locale } = useGameStore.getState()
     if (enemyTeam.players.length < 2) { store.setPhase('GAME_OVER'); return }
     const difficultyConfig = DIFFICULTY_CONFIG[difficulty]
 
@@ -127,7 +128,7 @@ export function useGameLoop() {
     if (opponentType === 'openai') {
       store.setAiThinking(true)
       store.setAiCommentary('')
-      store.setSubtitle('AI қарсылас ойланып жатыр...')
+      store.setSubtitle(locale === 'kk' ? 'AI қарсылас ойланып жатыр...' : 'AI соперник думает...')
       store.setPhase('BOT_CHOOSING')
 
       try {
@@ -137,6 +138,7 @@ export function useGameLoop() {
           enemyTeam,
           lastResult,
           difficulty,
+          locale,
         }))
 
         const runner = enemyTeam.players.find(p => p.id === move.runnerId)
@@ -176,7 +178,7 @@ export function useGameLoop() {
     const difficultyTaunt = difficulty === 'impossible'
       ? impossibleTaunts[Math.floor(Math.random() * impossibleTaunts.length)]
       : ''
-    store.setSubtitle(taunt || difficultyTaunt || `${botRunner.name} атакует вашу цепь!`)
+    store.setSubtitle(taunt || difficultyTaunt || (locale === 'kk' ? `${botRunner.name} сенің шебіңе шабуылдайды!` : `${botRunner.name} атакует вашу цепь!`))
     if (!taunt && difficultyTaunt) store.setAiCommentary(difficultyTaunt)
 
     setTimeout(() => {
@@ -188,17 +190,17 @@ export function useGameLoop() {
 
   // ─── 6. ENEMY_RUNS: игрок нажал SPACE (защита) ──────────────────────
   const handleDefenseTimingHit = useCallback((power: number, hitGreen: boolean) => {
-    const { currentRunner, currentTarget } = useGameStore.getState()
+    const { currentRunner, currentTarget, locale } = useGameStore.getState()
     if (!currentRunner || !currentTarget) return
     // success = true → цепь устояла (бот пойман)
-    const result = calculateDefense(currentRunner, currentTarget.left, currentTarget.right, power, hitGreen)
+    const result = calculateDefense(currentRunner, currentTarget.left, currentTarget.right, power, hitGreen, locale)
     store.setLastResult(result)
     store.setPhase('BREAKTHROUGH_ANIM')
   }, []) // eslint-disable-line
 
   // ─── 7. Анимация защиты завершена → применяем результат ─────────────
   const onBotAnimDone = useCallback(async () => {
-    const { currentRunner, currentTarget, lastResult } = useGameStore.getState()
+    const { currentRunner, currentTarget, lastResult, locale } = useGameStore.getState()
     if (!currentRunner || !currentTarget || !lastResult) return
 
     store.setPhase('RESULT')
@@ -218,7 +220,7 @@ export function useGameLoop() {
     const winner = checkWinCondition(pt, et)
 
     const event = lastResult.success ? 'team_winning' : 'enemy_fails'
-    const commentary = await getFallbackCommentary(event)
+    const commentary = await getFallbackCommentary(event, locale)
     store.setCommentary(commentary)
     const taunt = getAiTaunt({ result: lastResult, playerTeam: pt, enemyTeam: et, difficulty })
     store.setTauntText(taunt)

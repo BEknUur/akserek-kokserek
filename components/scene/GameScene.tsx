@@ -43,6 +43,7 @@ import { useGameStore } from '@/lib/store/gameStore'
 import { useGameLoop } from '@/lib/game/useGameLoop'
 import { Player } from '@/lib/store/types'
 import { VoiceCommand } from '@/lib/voice/speechRecognition'
+import { useTranslation } from '@/lib/i18n/useTranslation'
 
 // ─── 3D сцена ─────────────────────────────────────────────────────────────────
 
@@ -157,16 +158,17 @@ function SceneContent({ onPlayerAnimDone, onBotAnimDone }: {
 // ─── Главный компонент ────────────────────────────────────────────────────────
 
 const PHASE_LABELS: Partial<Record<string, string>> = {
-  PLAYER_CHOOSES: 'Сенің кезің',
-  PLAYER_RUNS:    'ЖАРЫП ӨТ!',
-  BOT_CHOOSING:   'Бот таңдайды...',
-  ENEMY_RUNS:     'ЦЕП ҰСТА!',
-  RESULT:         'Нәтиже',
-  SETUP:          'Дайындалуда...',
+  PLAYER_CHOOSES: 'game.choosePlayer',
+  PLAYER_RUNS:    'game.breakthrough',
+  BOT_CHOOSING:   'game.aiThinking',
+  ENEMY_RUNS:     'game.holdChain',
+  RESULT:         'game.phase',
+  SETUP:          'game.loading',
 }
 
 export default function GameScene() {
   const router = useRouter()
+  const { t } = useTranslation()
   const {
     phase, playerTeam, enemyTeam, round,
     commentaryText, isCommentaryLoading, subtitleText,
@@ -292,9 +294,9 @@ export default function GameScene() {
                 initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                 className="bg-[var(--ui-bg)] border border-[var(--steppe-gold)]/40 rounded-lg px-5 py-2">
                 <p className="font-title text-[var(--steppe-gold)] text-xs tracking-widest uppercase">
-                  {PHASE_LABELS[phase]}
+                  {t(PHASE_LABELS[phase] ?? 'game.phase')}
                 </p>
-                <p className="text-gray-500 text-xs font-body mt-0.5">Раунд {round}</p>
+                <p className="text-gray-500 text-xs font-body mt-0.5">{t('game.round')} {round}</p>
               </motion.div>
             </AnimatePresence>
           </div>
@@ -336,9 +338,9 @@ export default function GameScene() {
               className="rounded-lg border border-[var(--steppe-gold)]/45 bg-black/70 px-4 py-2 text-center shadow-xl"
             >
               <p className="font-kazakh text-sm text-[var(--steppe-gold)]">
-                AI қарсылас ойланып жатыр...
+                {t('game.aiThinking')}
               </p>
-              <p className="font-body text-xs text-white/60">AI думает...</p>
+              <p className="font-body text-xs text-white/60">{t('game.aiThinkingRu')}</p>
             </motion.div>
           </div>
         )}
@@ -390,17 +392,17 @@ export default function GameScene() {
                 className="bg-black/75 border border-[var(--steppe-gold)]/60 rounded-2xl px-8 py-5 text-center shadow-[0_0_40px_rgba(255,215,0,0.2)]">
                 {!pendingRunner ? (
                   <>
-                    <p className="font-title text-[var(--steppe-gold)] text-xl mb-1">ШАГ 1</p>
-                    <p className="text-white text-sm font-body">Кто побежит ломать цепь?</p>
-                    <p className="text-blue-300 text-xs font-body mt-1">← Выбери своего игрока</p>
+                    <p className="font-title text-[var(--steppe-gold)] text-xl mb-1">{t('game.step1')}</p>
+                    <p className="text-white text-sm font-body">{t('game.whoRuns')}</p>
+                    <p className="text-blue-300 text-xs font-body mt-1">← {t('game.chooseOwnPlayer')}</p>
                   </>
                 ) : (
                   <>
-                    <p className="font-title text-[var(--steppe-gold)] text-xl mb-1">ШАГ 2</p>
+                    <p className="font-title text-[var(--steppe-gold)] text-xl mb-1">{t('game.step2')}</p>
                     <p className="text-white text-sm font-body">
-                      <span className="text-blue-300 font-semibold">{pendingRunner.name}</span> атакует — куда?
+                      <span className="text-blue-300 font-semibold">{pendingRunner.name}</span> {t('game.whereAttack')}
                     </p>
-                    <p className="text-red-300 text-xs font-body mt-1">Выбери цель в команде врага →</p>
+                    <p className="text-red-300 text-xs font-body mt-1">{t('game.chooseEnemyTarget')} →</p>
                   </>
                 )}
               </motion.div>
@@ -428,7 +430,7 @@ export default function GameScene() {
         <button onClick={() => router.push('/')}
           className="absolute top-4 left-4 text-gray-500 hover:text-white text-xs font-body
                      bg-black/30 hover:bg-black/50 px-3 py-1.5 rounded transition-colors pointer-events-auto">
-          ← Басты бет
+          ← {t('game.backHome')}
         </button>
 
         {phase !== 'TEAM_SELECT' && (

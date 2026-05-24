@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { TeamProfile, PROFILES } from '@/lib/game/fallbackContent'
+import { useTranslation } from '@/lib/i18n/useTranslation'
 
 interface TeamSelectProps {
   onSelect: (profile: TeamProfile) => void
@@ -14,6 +15,8 @@ const CARDS: { profile: TeamProfile; icon: string; color: string; border: string
 ]
 
 export default function TeamSelect({ onSelect }: TeamSelectProps) {
+  const { t, locale } = useTranslation()
+
   return (
     <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/80">
       <motion.div
@@ -24,10 +27,10 @@ export default function TeamSelect({ onSelect }: TeamSelectProps) {
       >
         {/* Заголовок */}
         <p className="font-kazakh text-[var(--steppe-gold)] text-sm tracking-widest uppercase mb-2">
-          Командаңды таңда
+          {t('game.selectTeam')}
         </p>
-        <h2 className="font-title text-3xl text-white mb-1">Кімсің?</h2>
-        <p className="text-gray-400 text-sm font-body mb-8">Выбери стиль игры своей команды</p>
+        <h2 className="font-title text-3xl text-white mb-1">{t('game.whoAreYou')}</h2>
+        <p className="text-gray-400 text-sm font-body mb-8">{t('game.chooseStyle')}</p>
 
         {/* Карточки */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
@@ -45,14 +48,14 @@ export default function TeamSelect({ onSelect }: TeamSelectProps) {
                 className={`bg-gradient-to-b ${color} border ${border} rounded-xl p-5 text-left cursor-pointer`}
               >
                 <div className="text-4xl mb-3">{icon}</div>
-                <h3 className="font-title text-white text-base mb-0.5">{info.label}</h3>
-                <p className="text-gray-400 text-xs font-body mb-4">{info.labelRu}</p>
+                <h3 className="font-title text-white text-base mb-0.5">{locale === 'kk' ? info.label : info.labelRu}</h3>
+                <p className="text-gray-400 text-xs font-body mb-4">{locale === 'kk' ? info.labelRu : info.label}</p>
 
                 {/* Стат-бары */}
                 <div className="space-y-2">
                   <div>
                     <div className="flex justify-between text-xs font-body mb-0.5">
-                      <span className="text-blue-300">⚡ Күш (атака)</span>
+                      <span className="text-blue-300">⚡ {t('game.kushStat')}</span>
                       <span className="text-blue-300">{info.kushRange[0]}–{info.kushRange[1]}</span>
                     </div>
                     <div className="h-1.5 bg-white/10 rounded-full">
@@ -64,7 +67,7 @@ export default function TeamSelect({ onSelect }: TeamSelectProps) {
                   </div>
                   <div>
                     <div className="flex justify-between text-xs font-body mb-0.5">
-                      <span className="text-red-300">🛡 Қарсылық (цепь)</span>
+                      <span className="text-red-300">🛡 {t('game.karsylykStat')}</span>
                       <span className="text-red-300">{info.karRange[0]}–{info.karRange[1]}</span>
                     </div>
                     <div className="h-1.5 bg-white/10 rounded-full">
@@ -81,7 +84,7 @@ export default function TeamSelect({ onSelect }: TeamSelectProps) {
         </div>
 
         <p className="text-gray-600 text-xs font-body">
-          ⚡ Күш — мощь атаки при прорыве &nbsp;·&nbsp; 🛡 Қарсылық — стойкость цепи при защите
+          {t('game.statHint')}
         </p>
       </motion.div>
     </div>

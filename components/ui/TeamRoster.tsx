@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { Team, Player } from '@/lib/store/types'
 import PlayerCard from './PlayerCard'
+import { useTranslation } from '@/lib/i18n/useTranslation'
 
 interface TeamRosterProps {
   team: Team
@@ -12,6 +13,8 @@ interface TeamRosterProps {
 }
 
 export default function TeamRoster({ team, isSelectable, selectedId, onSelect }: TeamRosterProps) {
+  const { t } = useTranslation()
+
   return (
     <motion.div
       initial={{ opacity: 0, x: -20 }}
@@ -20,12 +23,12 @@ export default function TeamRoster({ team, isSelectable, selectedId, onSelect }:
     >
       <div className={`bg-[var(--ui-bg)] border rounded-lg p-2 ${isSelectable ? 'border-[var(--steppe-gold)]/60' : 'border-blue-500/40'}`}>
         <div className="flex items-center justify-between mb-2">
-          <p className="font-title text-blue-400 text-xs tracking-wider">{team.name}</p>
+          <p className="font-title text-blue-400 text-xs tracking-wider">{team.color === 'blue' ? t('teams.akserek') : team.name}</p>
           <span className="text-gray-400 text-xs font-body">{team.players.length}</span>
         </div>
         {isSelectable && (
           <p className="text-[var(--steppe-gold)] text-[10px] font-body mb-1.5 text-center">
-            ↑ Куда зовёшь врага?
+            ↑ {t('game.chooseOwnPlayer')}
           </p>
         )}
         <div className="flex flex-col gap-1">

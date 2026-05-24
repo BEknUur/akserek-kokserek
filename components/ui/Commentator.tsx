@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from '@/lib/i18n/useTranslation'
 
 interface CommentatorProps {
   text: string
@@ -41,6 +42,7 @@ function TypewriterText({ text, speed = 35, onDone }: { text: string; speed?: nu
 
 export default function Commentator({ text, isLoading, onDone }: CommentatorProps) {
   const [showContinue, setShowContinue] = useState(false)
+  const { t } = useTranslation()
 
   useEffect(() => {
     setShowContinue(false)
@@ -63,8 +65,8 @@ export default function Commentator({ text, isLoading, onDone }: CommentatorProp
             <div className="flex items-center gap-2 mb-2">
               <span className="text-3xl">👴🏽</span>
               <div>
-                <p className="font-title text-[var(--steppe-gold)] text-xs">Аташка</p>
-                <p className="text-gray-500 text-[10px] font-body">Комментатор</p>
+                <p className="font-title text-[var(--steppe-gold)] text-xs">{t('game.elder')}</p>
+                <p className="text-gray-500 text-[10px] font-body">{t('game.commentator')}</p>
               </div>
             </div>
 
@@ -92,7 +94,7 @@ export default function Commentator({ text, isLoading, onDone }: CommentatorProp
                   className="mt-3 w-full text-xs font-body text-[var(--steppe-gold)] border border-[var(--steppe-gold)]/40
                              rounded py-1.5 hover:bg-[var(--steppe-gold)]/10 transition-colors cursor-pointer"
                 >
-                  Жалғастыру →
+                  {t('game.continue')} →
                 </motion.button>
               )}
             </AnimatePresence>

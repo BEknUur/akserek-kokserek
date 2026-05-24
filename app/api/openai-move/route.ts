@@ -41,6 +41,7 @@ function isSafeGameState(value: unknown): value is OpenAiSafeGameState {
   return (
     typeof state.round === 'number' &&
     (state.difficulty === 'easy' || state.difficulty === 'normal' || state.difficulty === 'hard' || state.difficulty === 'impossible') &&
+    (state.locale === 'kk' || state.locale === 'ru') &&
     Array.isArray(state.playerTeam?.players) &&
     Array.isArray(state.enemyTeam?.players)
   )
@@ -138,6 +139,7 @@ export async function POST(request: Request) {
           '- если проигрываешь, играй рискованнее;',
           '- если выигрываешь, играй осторожнее.',
           '4. Верни только JSON без markdown.',
+          `Respond only in the current UI language: ${gameState.locale}.`,
           '',
           difficultyInstruction,
         ].join('\n'),

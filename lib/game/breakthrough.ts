@@ -1,18 +1,27 @@
 import { Player, BreakthroughResult } from '@/lib/store/types'
+import { Locale } from '@/lib/i18n/types'
 
-export function resolveTimingResult(mode: 'attack' | 'defense', hitGreen: boolean) {
+export function resolveTimingResult(mode: 'attack' | 'defense', hitGreen: boolean, locale: Locale = 'kk') {
   if (mode === 'attack') {
     return {
       success: hitGreen,
-      message: hitGreen ? 'ЖАРЫП ӨТТІ!' : 'ҰСТАЛЫП ҚАЛДЫ!',
-      subMessage: hitGreen ? 'Пользователь прорвался!' : 'Бегун остановлен!',
+      message: hitGreen
+        ? locale === 'kk' ? 'ЖАРЫП ӨТТІ!' : 'ПРОРВАЛСЯ!'
+        : locale === 'kk' ? 'ҰСТАЛЫП ҚАЛДЫ!' : 'НЕ СМОГ ПРОРВАТЬСЯ!',
+      subMessage: hitGreen
+        ? locale === 'kk' ? 'Ақсерек шепті бұзды!' : 'Игрок прорвался!'
+        : locale === 'kk' ? 'Бегун тоқтатылды!' : 'Бегун остановлен!',
     }
   }
 
   return {
     success: hitGreen,
-    message: hitGreen ? 'ҚОРҒАНЫС СӘТТІ!' : 'ЖАРЫП ӨТТІ!',
-    subMessage: hitGreen ? 'Цепь удержана!' : 'Бот прорвал цепь!',
+    message: hitGreen
+      ? locale === 'kk' ? 'ҚОРҒАНЫС СӘТТІ!' : 'ЗАЩИТА УСПЕШНА!'
+      : locale === 'kk' ? 'ЖАРЫП ӨТТІ!' : 'ПРОРВАЛСЯ!',
+    subMessage: hitGreen
+      ? locale === 'kk' ? 'Шеп ұсталды!' : 'Цепь удержана!'
+      : locale === 'kk' ? 'Көксерек шепті бұзды!' : 'Бот прорвал цепь!',
   }
 }
 
@@ -36,14 +45,15 @@ export function calculateBreakthrough(
   leftDefender: Player,
   rightDefender: Player,
   timerHitPower: number,   // 0–100 из BreakthroughBar
-  hitGreen: boolean
+  hitGreen: boolean,
+  locale: Locale = 'kk'
 ): BreakthroughResult {
   const chainStrength = (leftDefender.karsylyk + rightDefender.karsylyk) / 2
   const accuracy = timerHitPower / 100
   const attackPower = runner.kush * (0.5 + accuracy * 0.6)
   const randomFactor = 0.85 + Math.random() * 0.3
   const required = chainStrength * 0.55
-  const outcome = resolveTimingResult('attack', hitGreen)
+  const outcome = resolveTimingResult('attack', hitGreen, locale)
 
   return {
     mode: 'attack',
@@ -68,14 +78,15 @@ export function calculateDefense(
   leftDefender: Player,
   rightDefender: Player,
   timerHitPower: number,
-  hitGreen: boolean
+  hitGreen: boolean,
+  locale: Locale = 'kk'
 ): BreakthroughResult {
   const chainStrength = (leftDefender.karsylyk + rightDefender.karsylyk) / 2
   const accuracy = timerHitPower / 100
   const defensePower = chainStrength * (0.5 + accuracy * 0.6)
   const randomFactor = 0.85 + Math.random() * 0.3
   const required = runner.kush * 0.55
-  const outcome = resolveTimingResult('defense', hitGreen)
+  const outcome = resolveTimingResult('defense', hitGreen, locale)
 
   return {
     mode: 'defense',

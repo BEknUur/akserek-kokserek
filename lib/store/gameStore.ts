@@ -3,9 +3,11 @@ import { GameState, GamePhase, Player, Team, BreakthroughResult } from './types'
 import { Difficulty } from '@/lib/game/difficulty'
 import { WeatherType } from '@/lib/game/weatherSystem'
 import { GameMode, TournamentStage } from '@/lib/game/tournament'
+import { defaultLocale, Locale } from '@/lib/i18n/types'
 
 interface GameStore extends GameState {
   setPhase: (phase: GamePhase) => void
+  setLocale: (locale: Locale) => void
   setOpponentType: (type: 'bot' | 'openai') => void
   setDifficulty: (difficulty: Difficulty) => void
   setGameMode: (mode: GameMode) => void
@@ -42,6 +44,7 @@ const defaultEnemyTeam: Team = {
 
 const initialState: GameState = {
   phase: 'LANDING',
+  locale: defaultLocale,
   playerTeam: defaultPlayerTeam,
   enemyTeam: defaultEnemyTeam,
   round: 1,
@@ -69,6 +72,14 @@ export const useGameStore = create<GameStore>((set) => ({
   ...initialState,
 
   setPhase: (phase) => set({ phase }),
+
+  setLocale: (locale) => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('akserek-locale', locale)
+      document.documentElement.lang = locale
+    }
+    set({ locale })
+  },
 
   setOpponentType: (type) => set({ opponentType: type }),
 
@@ -148,6 +159,7 @@ export const useGameStore = create<GameStore>((set) => ({
     set((state) => ({
       ...initialState,
       difficulty: state.difficulty,
+      locale: state.locale,
       opponentType: state.opponentType,
       gameMode: state.gameMode,
       weather: state.weather,

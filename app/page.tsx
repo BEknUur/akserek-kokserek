@@ -1,5 +1,6 @@
 import Hero from '@/components/landing/Hero'
 import Rules from '@/components/landing/Rules'
+import { dictionary } from '@/lib/i18n/dictionary'
 
 export default function LandingPage() {
   return (
@@ -16,7 +17,7 @@ export default function LandingPage() {
           АҚСЕРЕК-КӨКСЕРЕК
         </p>
         <p className="text-gray-500 text-xs mt-1 font-body">
-          Қазақтың халық ойыны · Казахская народная игра
+          {dictionary.kk.landing.subtitle}
         </p>
       </footer>
     </main>

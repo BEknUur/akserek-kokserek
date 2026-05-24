@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import KazakhButton from '@/components/shared/KazakhButton'
+import { useTranslation } from '@/lib/i18n/useTranslation'
 
 interface GameOverProps {
   won: boolean
@@ -11,6 +12,8 @@ interface GameOverProps {
 }
 
 export default function GameOver({ won, playerTeamName, enemyTeamName, onRestart }: GameOverProps) {
+  const { t } = useTranslation()
+
   return (
     <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/75">
       <motion.div
@@ -26,15 +29,15 @@ export default function GameOver({ won, playerTeamName, enemyTeamName, onRestart
 
         {/* Заголовок */}
         <h1 className="font-title text-3xl mb-2" style={{ color: won ? 'var(--steppe-gold)' : '#f87171' }}>
-          {won ? 'ЖЕҢІС!' : 'ЖЕҢІЛІС'}
+          {won ? t('game.victory') : t('game.defeat')}
         </h1>
         <p className="text-gray-300 font-body text-lg mb-1">
-          {won ? 'Победа!' : 'Поражение'}
+          {t('game.gameOver')}
         </p>
         <p className="text-gray-500 text-sm font-body mb-8">
           {won
-            ? `Команда «${playerTeamName}» захватила всех!`
-            : `Команда «${enemyTeamName}» победила...`
+            ? `${t('teams.akserek') || playerTeamName}: ${t('game.victory')}`
+            : `${enemyTeamName}: ${t('game.defeat')}`
           }
         </p>
 
@@ -46,7 +49,7 @@ export default function GameOver({ won, playerTeamName, enemyTeamName, onRestart
         </div>
 
         <KazakhButton onClick={onRestart} variant="primary">
-          Қайтадан ойнау
+          {t('game.restart')}
         </KazakhButton>
       </motion.div>
     </div>
