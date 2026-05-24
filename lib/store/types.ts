@@ -1,15 +1,15 @@
 export type GamePhase =
   | 'LANDING'
-  | 'TUTORIAL'
+  | 'TEAM_SELECT'          // выбор команды
   | 'SETUP'
   | 'ENEMY_CRY'
   | 'ENEMY_CHOOSES'
-  | 'PLAYER_RUNS'
-  | 'BREAKTHROUGH_ANIM'   // промежуточная: анимация прорыва/отскока
+  | 'PLAYER_RUNS'          // наш ход: жмём ПРОБЕЛ для атаки
+  | 'BREAKTHROUGH_ANIM'
   | 'RESULT'
   | 'COMMENTARY'
   | 'PLAYER_CHOOSES'
-  | 'ENEMY_RUNS'
+  | 'ENEMY_RUNS'           // ход врага: жмём ПРОБЕЛ для защиты
   | 'GAME_OVER'
 
 export interface Player {

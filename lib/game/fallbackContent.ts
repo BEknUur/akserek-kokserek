@@ -32,12 +32,30 @@ function pick<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)]
 }
 
-function makeTeam(teamName: string, color: 'blue' | 'red', names: string[]): Team {
+function rand(min: number, max: number) {
+  return Math.floor(Math.random() * (max - min + 1)) + min
+}
+
+export type TeamProfile = 'attack' | 'balanced' | 'defense'
+
+const PROFILES: Record<TeamProfile, { kushRange: [number, number]; karRange: [number, number]; label: string; labelRu: string }> = {
+  attack:   { kushRange: [6, 9], karRange: [2, 5], label: 'Батыл батырлар', labelRu: 'Отважные батыры' },
+  balanced: { kushRange: [4, 7], karRange: [4, 7], label: 'Дала жауынгерлері', labelRu: 'Воины степи' },
+  defense:  { kushRange: [2, 5], karRange: [6, 9], label: 'Берік қорғаныш', labelRu: 'Стойкая защита' },
+}
+
+function makeTeamFromProfile(
+  names: string[],
+  color: 'blue' | 'red',
+  teamName: string,
+  profile: TeamProfile
+): Team {
+  const { kushRange, karRange } = PROFILES[profile]
   const players: Player[] = names.map((name, i) => ({
     id: `${color}-${i}-${Math.random().toString(36).slice(2, 9)}`,
     name,
-    kush: Math.floor(Math.random() * 6) + 3,
-    karsylyk: Math.floor(Math.random() * 6) + 3,
+    kush: rand(kushRange[0], kushRange[1]),
+    karsylyk: rand(karRange[0], karRange[1]),
     description: '',
     isCaptain: i === 0,
     team: color,
@@ -46,20 +64,20 @@ function makeTeam(teamName: string, color: 'blue' | 'red', names: string[]): Tea
   return { name: teamName, players, color }
 }
 
-// Генерирует обе команды из одного пула имён — никаких дублей между командами
-export async function getFallbackTeams(): Promise<[Team, Team]> {
+// Генерирует обе команды из одного пула — нет дублей имён
+export async function getFallbackTeams(playerProfile: TeamProfile = 'balanced'): Promise<[Team, Team]> {
   const names = await getNames()
   const allNames = [...names.male, ...names.female]
   const shuffled = [...allNames].sort(() => Math.random() - 0.5)
 
-  const blueNames = shuffled.slice(0, 5)
-  const redNames = shuffled.slice(5, 10)
-
   return [
-    makeTeam('Ақсерек', 'blue', blueNames),
-    makeTeam('Көксерек', 'red', redNames),
+    makeTeamFromProfile(shuffled.slice(0, 5), 'blue', 'Ақсерек', playerProfile),
+    makeTeamFromProfile(shuffled.slice(5, 10), 'red', 'Көксерек', 'balanced'),
   ]
 }
+
+export { PROFILES }
+export type { TeamProfile as TProfile }
 
 export async function getFallbackCry(): Promise<{ cry_kz: string; cry_ru: string }> {
   const cries = await getCries()
