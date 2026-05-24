@@ -28,9 +28,11 @@ import { useGameLoop } from '@/lib/game/useGameLoop'
 // ─── 3D Сцена ────────────────────────────────────────────────────────────────
 
 function SceneContent() {
-  const { phase, playerTeam, enemyTeam, currentRunner, currentTarget } = useGameStore()
+  const { phase, playerTeam, enemyTeam, currentRunner, currentTarget, lastResult } = useGameStore()
 
-  const runnerProgress = phase === 'PLAYER_RUNS' || phase === 'ENEMY_RUNS' ? 0.85 : 0
+  const isRunning = phase === 'PLAYER_RUNS' || phase === 'ENEMY_RUNS'
+  const isResult  = phase === 'RESULT'
+  const chainBroken = isResult && !!lastResult?.success
 
   return (
     <>
@@ -69,7 +71,12 @@ function SceneContent() {
       {playerTeam.players.length > 0 && (
         <>
           <PlayerRow team={playerTeam} zOffset={4} runnerId={currentRunner?.team === 'blue' ? currentRunner?.id : undefined} />
-          <Chain team={playerTeam} zOffset={4} />
+          <Chain
+            team={playerTeam}
+            zOffset={4}
+            brokenBetween={currentRunner?.team === 'red' && chainBroken ? currentTarget ?? undefined : undefined}
+            isBroken={currentRunner?.team === 'red' && chainBroken}
+          />
         </>
       )}
 
@@ -81,16 +88,20 @@ function SceneContent() {
             highlightedId={currentTarget?.left.id}
             runnerId={currentRunner?.team === 'red' ? currentRunner?.id : undefined}
           />
-          <Chain team={enemyTeam} zOffset={-4} />
+          <Chain
+            team={enemyTeam}
+            zOffset={-4}
+            brokenBetween={currentRunner?.team === 'blue' && chainBroken ? currentTarget ?? undefined : undefined}
+            isBroken={currentRunner?.team === 'blue' && chainBroken}
+          />
         </>
       )}
 
       {/* Бегун в движении */}
-      {currentRunner && (phase === 'PLAYER_RUNS' || phase === 'ENEMY_RUNS') && (
+      {currentRunner && isRunning && (
         <Runner
           runner={currentRunner}
           targetZ={currentRunner.team === 'blue' ? -4 : 4}
-          progress={runnerProgress}
         />
       )}
 

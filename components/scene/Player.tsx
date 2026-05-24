@@ -2,7 +2,7 @@
 
 import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { Text } from '@react-three/drei'
+import { Text, Billboard } from '@react-three/drei'
 import * as THREE from 'three'
 import { Player as PlayerType } from '@/lib/store/types'
 
@@ -65,31 +65,31 @@ export default function Player({ player, isHighlighted, isRunner, onClick }: Pla
         <meshStandardMaterial color={isHighlighted ? '#ffd700' : '#ffd700'} />
       </mesh>
 
-      {/* Имя над головой */}
-      <Text
-        position={[0, 1.55, 0]}
-        fontSize={0.2}
-        color={isHighlighted ? '#ffd700' : 'white'}
-        anchorX="center"
-        anchorY="middle"
-        outlineWidth={0.03}
-        outlineColor="#000000"
-      >
-        {player.name}
-      </Text>
-
-      {/* Индикатор капитана */}
-      {player.isCaptain && (
+      {/* Имя + звезда капитана — Billboard всегда смотрит на камеру */}
+      <Billboard follow lockX={false} lockY lockZ={false}>
         <Text
-          position={[0, 1.85, 0]}
-          fontSize={0.18}
-          color="#ffd700"
+          position={[0, 1.55, 0]}
+          fontSize={0.2}
+          color={isHighlighted ? '#ffd700' : 'white'}
           anchorX="center"
           anchorY="middle"
+          outlineWidth={0.03}
+          outlineColor="#000000"
         >
-          ★
+          {player.name}
         </Text>
-      )}
+        {player.isCaptain && (
+          <Text
+            position={[0, 1.85, 0]}
+            fontSize={0.18}
+            color="#ffd700"
+            anchorX="center"
+            anchorY="middle"
+          >
+            ★
+          </Text>
+        )}
+      </Billboard>
 
       {/* Подсветка снизу при выделении */}
       {isHighlighted && (
