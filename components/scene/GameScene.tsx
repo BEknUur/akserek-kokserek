@@ -144,6 +144,7 @@ export default function GameScene() {
     phase, playerTeam, enemyTeam, round,
     commentaryText, isCommentaryLoading, subtitleText,
     isAiThinking, aiCommentary,
+    difficulty,
     currentRunner, currentTarget, lastResult,
   } = useGameStore()
   const store = useGameStore()
@@ -167,6 +168,10 @@ export default function GameScene() {
 
   useEffect(() => {
     store.setPhase('TEAM_SELECT')
+    const saved = window.localStorage.getItem('akserek-difficulty')
+    if (saved === 'easy' || saved === 'normal' || saved === 'hard' || saved === 'impossible') {
+      store.setDifficulty(saved)
+    }
   }, []) // eslint-disable-line
 
   const handleEnemyTargetClick = (enemyTarget: Player) => {
@@ -174,8 +179,15 @@ export default function GameScene() {
     handlePlayerAttackChoice(pendingRunner, enemyTarget)
   }
 
+  const impossiblePressure = difficulty === 'impossible' &&
+    (phase === 'PLAYER_RUNS' || phase === 'ENEMY_RUNS' || phase === 'BOT_CHOOSING')
+
   return (
-    <div className="relative w-screen h-screen overflow-hidden">
+    <motion.div
+      className={`relative w-screen h-screen overflow-hidden ${difficulty === 'impossible' ? 'bg-red-950' : ''}`}
+      animate={impossiblePressure ? { x: [0, -2, 2, -1, 1, 0] } : { x: 0 }}
+      transition={impossiblePressure ? { duration: 0.22, repeat: Infinity, repeatDelay: 0.28 } : undefined}
+    >
       {/* Canvas */}
       <Canvas camera={{ position: [0, 5, 14], fov: 60 }} shadows
         style={{ width: '100vw', height: '100vh', background: '#1a0a2e' }}
@@ -184,6 +196,29 @@ export default function GameScene() {
           <SceneContent onPlayerAnimDone={onPlayerAnimDone} onBotAnimDone={onBotAnimDone} />
         </Suspense>
       </Canvas>
+
+      {difficulty === 'impossible' && (
+        <div className="absolute inset-0 z-20 pointer-events-none">
+          <motion.div
+            className="absolute inset-0 border-4 border-red-500/25 shadow-[inset_0_0_90px_rgba(239,68,68,0.34)]"
+            animate={impossiblePressure ? { opacity: [0.25, 0.65, 0.25] } : { opacity: 0.22 }}
+            transition={{ duration: 0.8, repeat: Infinity }}
+          />
+          {impossiblePressure && (
+            <div className="absolute inset-0 overflow-hidden opacity-45">
+              {Array.from({ length: 12 }).map((_, index) => (
+                <motion.span
+                  key={index}
+                  className="absolute h-px w-48 bg-gradient-to-r from-transparent via-red-300 to-transparent"
+                  style={{ top: `${8 + index * 8}%`, left: '-20%' }}
+                  animate={{ x: ['0vw', '140vw'] }}
+                  transition={{ duration: 0.45 + index * 0.025, repeat: Infinity, ease: 'linear' }}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── HUD ── */}
       <div className="absolute inset-0 pointer-events-none">
@@ -358,6 +393,6 @@ export default function GameScene() {
           />
         </div>
       )}
-    </div>
+    </motion.div>
   )
 }

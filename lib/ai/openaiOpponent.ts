@@ -1,4 +1,5 @@
 import { BreakthroughResult, Player, Team } from '@/lib/store/types'
+import { Difficulty } from '@/lib/game/difficulty'
 
 export type AiMove = {
   runnerId: string
@@ -19,7 +20,7 @@ export type OpenAiSafeGameState = {
     players: SafePlayer[]
   }
   lastResult?: Pick<BreakthroughResult, 'mode' | 'success' | 'message'> | null
-  difficulty: string
+  difficulty: Difficulty
 }
 
 export function toOpenAiSafeGameState(params: {
@@ -27,7 +28,7 @@ export function toOpenAiSafeGameState(params: {
   playerTeam: Team
   enemyTeam: Team
   lastResult?: BreakthroughResult
-  difficulty?: string
+  difficulty?: Difficulty
 }): OpenAiSafeGameState {
   const mapPlayer = ({ id, name, kush, karsylyk }: Player): SafePlayer => ({
     id,

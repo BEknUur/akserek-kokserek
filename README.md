@@ -1,36 +1,93 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Ақсерек · Көксерек
 
-## Getting Started
+Интерактивная 3D-игра по мотивам казахской народной игры «Ақсерек-көксерек». Проект переносит традиционные правила в формат зрелищной сцены с командным выбором, тайминг-миниигрой, комментатором и голосовым озвучиванием.
 
-First, run the development server:
+## О чем проект
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+Игрок управляет командой «Ақсерек» и сражается против «Көксерек». В каждом раунде выбирается бегун и цель в цепи соперника. Исход прорыва зависит от силы персонажей и точности попадания в зеленую зону тайминг-бара. Есть классический бот и режим с AI-соперником.
+
+## Технологии
+
+- Next.js 16 (App Router)
+- React 19
+- TypeScript
+- Three.js + @react-three/fiber / drei / postprocessing
+- Framer Motion
+- Zustand
+- Tailwind CSS
+- Howler (воспроизведение звука)
+- OpenAI API (логика ходов и чат)
+- ElevenLabs API (TTS озвучка)
+
+## Ключевые возможности
+
+- 3D-сцена степи с юртами, небом, освещением и пост-эффектами
+- Две команды, цепи игроков, прорыв и захват
+- Тайминг-миниигра (атака и защита) с динамической сложностью
+- Профили команды: атака / баланс / защита
+- Уровни сложности: easy / normal / hard / impossible
+- AI-соперник (OpenAI) или локальный бот с fallback-логикой
+- AI-чат с соперником прямо в игре
+- Голосовой комментатор и TTS-озвучка (ElevenLabs)
+- Комментарии и субтитры с атмосферными фразами
+- Местные ассеты: имена, кличи, комментарйи
+
+## Как устроена игра
+
+1. На стартовом экране выбирается сложность и тип соперника.
+2. Затем выбирается профиль команды (атака/баланс/защита).
+3. Игрок выбирает своего бегуна и цель в цепи противника.
+4. Тайминг-бар определяет исход прорыва.
+5. Команды обмениваются игроками по результату раунда.
+6. Победа наступает, когда у соперника остается 1 или 0 игроков.
+
+## Архитектура и важные модули
+
+- 3D-сцена и HUD: [components/scene/GameScene.tsx](components/scene/GameScene.tsx)
+- Игровой цикл и переходы фаз: [lib/game/useGameLoop.ts](lib/game/useGameLoop.ts)
+- Логика прорыва и защиты: [lib/game/breakthrough.ts](lib/game/breakthrough.ts)
+- Настройки сложности: [lib/game/difficulty.ts](lib/game/difficulty.ts)
+- Zustand-хранилище: [lib/store/gameStore.ts](lib/store/gameStore.ts)
+- OpenAI безопасное состояние и вызовы: [lib/ai/openaiOpponent.ts](lib/ai/openaiOpponent.ts)
+- TTS и кэширование озвучки: [lib/ai/elevenlabs.ts](lib/ai/elevenlabs.ts)
+- Данные для фолбэка (имена/кличи/комментарии): [lib/game/fallbackContent.ts](lib/game/fallbackContent.ts)
+
+## API-роуты
+
+- AI-чат соперника: [app/api/ai-chat/route.ts](app/api/ai-chat/route.ts)
+- Ход AI-соперника: [app/api/openai-move/route.ts](app/api/openai-move/route.ts)
+- TTS-озвучка: [app/api/tts/route.ts](app/api/tts/route.ts)
+
+## Переменные окружения
+
+Создайте файл `.env` и укажите ключи (если хотите включить AI и TTS):
+
+```
+OPENAI_API_KEY=...
+OPENAI_MODEL=gpt-4o-mini
+ELEVENLABS_API_KEY=...
+ELEVENLABS_VOICE_ID=...
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Если ключи не заданы, проект автоматически переключается на фолбэк-логику (без AI и TTS).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Запуск проекта
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+npm install
+npm run dev
+```
 
-## Learn More
+Откройте http://localhost:3000
 
-To learn more about Next.js, take a look at the following resources:
+## Структура страниц
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Главная и описание: [app/page.tsx](app/page.tsx)
+- Меню: [app/menu/page.tsx](app/menu/page.tsx)
+- Игровая сцена: [app/game/page.tsx](app/game/page.tsx)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Примечания
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Сложность влияет на скорость курсора, ширину зеленой зоны и точность AI.
+- Голосовая озвучка включается/выключается в UI и поддерживает регулировку громкости.
+- Игровые фразы и комментарии можно расширять в [public/ai-content](public/ai-content).

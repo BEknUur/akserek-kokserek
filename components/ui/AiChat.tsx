@@ -11,7 +11,7 @@ type ChatMessage = {
 }
 
 export default function AiChat() {
-  const { round, playerTeam, enemyTeam, lastResult } = useGameStore()
+  const { round, playerTeam, enemyTeam, lastResult, difficulty } = useGameStore()
   const [isOpen, setIsOpen] = useState(false)
   const [input, setInput] = useState('')
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -28,9 +28,9 @@ export default function AiChat() {
       playerTeam,
       enemyTeam,
       lastResult,
-      difficulty: 'normal',
+      difficulty,
     })
-  }, [round, playerTeam, enemyTeam, lastResult])
+  }, [round, playerTeam, enemyTeam, lastResult, difficulty])
 
   const sendMessage = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()

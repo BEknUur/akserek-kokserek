@@ -1,9 +1,11 @@
 import { create } from 'zustand'
 import { GameState, GamePhase, Player, Team, BreakthroughResult } from './types'
+import { Difficulty } from '@/lib/game/difficulty'
 
 interface GameStore extends GameState {
   setPhase: (phase: GamePhase) => void
   setOpponentType: (type: 'bot' | 'openai') => void
+  setDifficulty: (difficulty: Difficulty) => void
   setTeams: (playerTeam: Team, enemyTeam: Team) => void
   setRunner: (runner: Player) => void
   setTarget: (left: Player, right: Player) => void
@@ -38,6 +40,7 @@ const initialState: GameState = {
   enemyTeam: defaultEnemyTeam,
   round: 1,
   opponentType: 'bot',
+  difficulty: 'normal',
   currentRunner: undefined,
   currentTarget: undefined,
   lastResult: undefined,
@@ -58,6 +61,13 @@ export const useGameStore = create<GameStore>((set) => ({
   setPhase: (phase) => set({ phase }),
 
   setOpponentType: (type) => set({ opponentType: type }),
+
+  setDifficulty: (difficulty) => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('akserek-difficulty', difficulty)
+    }
+    set({ difficulty })
+  },
 
   setTeams: (playerTeam, enemyTeam) => set({ playerTeam, enemyTeam }),
 
@@ -111,5 +121,12 @@ export const useGameStore = create<GameStore>((set) => ({
   addHighlight: (event) =>
     set((state) => ({ highlights: [...state.highlights, event] })),
 
-  resetGame: () => set(initialState),
+  resetGame: () =>
+    set((state) => ({
+      ...initialState,
+      difficulty: state.difficulty,
+      opponentType: state.opponentType,
+      isVoiceEnabled: state.isVoiceEnabled,
+      volume: state.volume,
+    })),
 }))

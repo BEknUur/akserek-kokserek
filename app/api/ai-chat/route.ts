@@ -22,7 +22,7 @@ function isSafeGameState(value: unknown): value is OpenAiSafeGameState {
   const state = value as OpenAiSafeGameState
   return (
     typeof state.round === 'number' &&
-    typeof state.difficulty === 'string' &&
+    (state.difficulty === 'easy' || state.difficulty === 'normal' || state.difficulty === 'hard' || state.difficulty === 'impossible') &&
     Array.isArray(state.playerTeam?.players) &&
     Array.isArray(state.enemyTeam?.players)
   )

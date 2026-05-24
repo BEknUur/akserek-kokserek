@@ -1,3 +1,5 @@
+import { Difficulty } from '@/lib/game/difficulty'
+
 export type GamePhase =
   | 'LANDING'
   | 'TEAM_SELECT'
@@ -43,6 +45,7 @@ export interface GameState {
   enemyTeam: Team
   round: number
   opponentType: 'bot' | 'openai'
+  difficulty: Difficulty
   currentRunner?: Player
   currentTarget?: { left: Player; right: Player }
   lastResult?: BreakthroughResult

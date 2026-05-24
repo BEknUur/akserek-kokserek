@@ -4,10 +4,11 @@ import { useCallback } from 'react'
 import { useGameStore } from '@/lib/store/gameStore'
 import { getFallbackTeams, getFallbackCommentary, TeamProfile } from './fallbackContent'
 import { calculateBreakthrough, calculateDefense } from './breakthrough'
-import { aiChooseVictim, chooseDefenders } from './aiOpponent'
+import { chooseAiDefenders, chooseAiRunner } from './aiOpponent'
 import { checkWinCondition } from './stateMachine'
 import { Player } from '@/lib/store/types'
 import { getOpenAiMove, toOpenAiSafeGameState } from '@/lib/ai/openaiOpponent'
+import { DIFFICULTY_CONFIG, simulateAiTiming } from './difficulty'
 
 export function useGameLoop() {
   const store = useGameStore()
@@ -37,9 +38,23 @@ export function useGameLoop() {
 
   // ─── 3. PLAYER_RUNS: игрок нажал SPACE (атака) ──────────────────────
   const handleAttackTimingHit = useCallback((power: number, hitGreen: boolean) => {
-    const { currentRunner, currentTarget } = useGameStore.getState()
+    const { currentRunner, currentTarget, difficulty } = useGameStore.getState()
     if (!currentRunner || !currentTarget) return
-    const result = calculateBreakthrough(currentRunner, currentTarget.left, currentTarget.right, power, hitGreen)
+    const aiDefenseMistake = !simulateAiTiming(difficulty)
+    const perfectStrikeWindow = {
+      easy: 20,
+      normal: 13,
+      hard: 8,
+      impossible: 3,
+    }[difficulty]
+    const perfectStrike = Math.abs(power - 50) <= perfectStrikeWindow
+    const result = calculateBreakthrough(
+      currentRunner,
+      currentTarget.left,
+      currentTarget.right,
+      power,
+      hitGreen && (aiDefenseMistake || perfectStrike)
+    )
     store.setLastResult(result)
     store.setPhase('BREAKTHROUGH_ANIM')
   }, []) // eslint-disable-line
@@ -78,8 +93,9 @@ export function useGameLoop() {
 
   // ─── 5. BOT_CHOOSING → ENEMY_RUNS ───────────────────────────────────
   const startBotTurn = useCallback(async () => {
-    const { enemyTeam, playerTeam, opponentType, round, lastResult } = useGameStore.getState()
+    const { enemyTeam, playerTeam, opponentType, round, lastResult, difficulty } = useGameStore.getState()
     if (enemyTeam.players.length < 2) { store.setPhase('GAME_OVER'); return }
+    const difficultyConfig = DIFFICULTY_CONFIG[difficulty]
 
     let botRunner: Player
     let defenders: { left: Player; right: Player }
@@ -97,7 +113,7 @@ export function useGameLoop() {
           playerTeam,
           enemyTeam,
           lastResult,
-          difficulty: 'normal',
+          difficulty,
         }))
 
         const runner = enemyTeam.players.find(p => p.id === move.runnerId)
@@ -113,29 +129,38 @@ export function useGameLoop() {
         taunt = move.taunt
       } catch (error) {
         console.warn('OpenAI opponent failed; falling back to bot logic', error)
-        botRunner = aiChooseVictim(playerTeam, enemyTeam) // он "атакует" нашу команду
-        defenders = chooseDefenders(playerTeam)
+        botRunner = chooseAiRunner(enemyTeam, playerTeam, difficulty)
+        defenders = chooseAiDefenders(playerTeam, enemyTeam, difficulty)
       } finally {
         store.setAiThinking(false)
       }
     } else {
       // Бот выбирает своего лучшего атакующего
-      botRunner = aiChooseVictim(playerTeam, enemyTeam) // он "атакует" нашу команду
+      botRunner = chooseAiRunner(enemyTeam, playerTeam, difficulty) // он "атакует" нашу команду
       // Бот выбирает gap в нашей цепи
-      defenders = chooseDefenders(playerTeam)
+      defenders = chooseAiDefenders(playerTeam, enemyTeam, difficulty)
       store.setPhase('BOT_CHOOSING')
     }
 
     store.setRunner(botRunner)
     store.setTarget(defenders.left, defenders.right)
     store.setAiCommentary(taunt)
-    store.setSubtitle(taunt || `${botRunner.name} атакует вашу цепь!`)
+    const impossibleTaunts = [
+      'Бұл деңгейді бәрі өте алмайды.',
+      'Сен дайын емессің.',
+      'Мен сені сындырамын.',
+    ]
+    const difficultyTaunt = difficulty === 'impossible'
+      ? impossibleTaunts[Math.floor(Math.random() * impossibleTaunts.length)]
+      : ''
+    store.setSubtitle(taunt || difficultyTaunt || `${botRunner.name} атакует вашу цепь!`)
+    if (!taunt && difficultyTaunt) store.setAiCommentary(difficultyTaunt)
 
     setTimeout(() => {
       store.setSubtitle('')
       store.setAiCommentary('')
       store.setPhase('ENEMY_RUNS')  // → игрок жмёт ПРОБЕЛ для ЗАЩИТЫ
-    }, 2000)
+    }, difficultyConfig.aiReactionDelay)
   }, []) // eslint-disable-line
 
   // ─── 6. ENEMY_RUNS: игрок нажал SPACE (защита) ──────────────────────

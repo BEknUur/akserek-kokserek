@@ -40,7 +40,7 @@ function isSafeGameState(value: unknown): value is OpenAiSafeGameState {
   const state = value as OpenAiSafeGameState
   return (
     typeof state.round === 'number' &&
-    typeof state.difficulty === 'string' &&
+    (state.difficulty === 'easy' || state.difficulty === 'normal' || state.difficulty === 'hard' || state.difficulty === 'impossible') &&
     Array.isArray(state.playerTeam?.players) &&
     Array.isArray(state.enemyTeam?.players)
   )
@@ -112,6 +112,10 @@ export async function POST(request: Request) {
   }
 
   try {
+    const difficultyInstruction = gameState.difficulty === 'impossible'
+      ? 'You are playing on IMPOSSIBLE difficulty. Play extremely strategically and aggressively. Minimize mistakes. Always search for weakest chains. Use strongest runners. Try to dominate the player.'
+      : `Difficulty is ${gameState.difficulty}. Adjust risk, aggression, and randomness to this level.`
+
     const response = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
       headers: {
@@ -134,6 +138,8 @@ export async function POST(request: Request) {
           '- если проигрываешь, играй рискованнее;',
           '- если выигрываешь, играй осторожнее.',
           '4. Верни только JSON без markdown.',
+          '',
+          difficultyInstruction,
         ].join('\n'),
         input: JSON.stringify(gameState),
         text: {

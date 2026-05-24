@@ -1,11 +1,13 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import KazakhButton from '@/components/shared/KazakhButton'
 import KazakhOrnament from '@/components/shared/KazakhOrnament'
 import dynamic from 'next/dynamic'
 import { useGameStore } from '@/lib/store/gameStore'
+import { Difficulty } from '@/lib/game/difficulty'
 
 const PreviewScene = dynamic(() => import('@/components/scene/PreviewScene'), {
   ssr: false,
@@ -15,10 +17,36 @@ const PreviewScene = dynamic(() => import('@/components/scene/PreviewScene'), {
 export default function Hero() {
   const router = useRouter()
   const setOpponentType = useGameStore((state) => state.setOpponentType)
+  const difficulty = useGameStore((state) => state.difficulty)
+  const setDifficulty = useGameStore((state) => state.setDifficulty)
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem('akserek-difficulty')
+    if (saved === 'easy' || saved === 'normal' || saved === 'hard' || saved === 'impossible') {
+      setDifficulty(saved)
+    }
+  }, [setDifficulty])
 
   const startGame = (opponentType: 'bot' | 'openai') => {
     setOpponentType(opponentType)
     router.push('/game')
+  }
+
+  const difficulties: Array<{
+    id: Difficulty
+    label: string
+    description: string
+  }> = [
+    { id: 'easy', label: 'Easy', description: 'Медленный timing bar. Большая зелёная зона. AI часто ошибается.' },
+    { id: 'normal', label: 'Normal', description: 'Стандартный баланс для классической игры.' },
+    { id: 'hard', label: 'Hard', description: 'Быстрый timing bar. AI играет умно и давит слабые звенья.' },
+    { id: 'impossible', label: 'Impossible', description: 'Очень быстрый timing bar. Маленькая зона. AI почти не ошибается.' },
+  ]
+  const difficultyDot: Record<Difficulty, string> = {
+    easy: 'bg-green-400',
+    normal: 'bg-yellow-400',
+    hard: 'bg-orange-500',
+    impossible: 'bg-red-500',
   }
 
   return (
@@ -76,25 +104,49 @@ export default function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.9 }}
-            className="mt-9 flex flex-col gap-3 sm:flex-row sm:flex-wrap"
+            className="mt-8"
           >
-            <KazakhButton onClick={() => startGame('bot')} variant="primary">
-              Обычная игра
-            </KazakhButton>
-            <KazakhButton onClick={() => startGame('openai')} variant="primary">
-              Играть с AI
-            </KazakhButton>
-            <KazakhButton onClick={() => router.push('/menu')} variant="secondary">
-              Мәзір
-            </KazakhButton>
-            <KazakhButton
-              onClick={() => {
-                document.getElementById('rules')?.scrollIntoView({ behavior: 'smooth' })
-              }}
-              variant="secondary"
-            >
-              Ережелер
-            </KazakhButton>
+            <div className="grid max-w-2xl grid-cols-1 gap-2 sm:grid-cols-2">
+              {difficulties.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setDifficulty(item.id)}
+                  className={`rounded-lg border p-3 text-left transition-colors ${
+                    difficulty === item.id
+                      ? 'border-[var(--steppe-gold)] bg-black/55'
+                      : 'border-white/15 bg-black/30 hover:border-white/35'
+                  }`}
+                >
+                  <span className="flex items-center gap-2 font-title text-sm uppercase tracking-widest text-white">
+                    <span className={`h-2.5 w-2.5 rounded-full ${difficultyDot[item.id]}`} />
+                    {item.label}
+                  </span>
+                  <span className="mt-1 block font-body text-xs leading-relaxed text-white/62">
+                    {item.description}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <KazakhButton onClick={() => startGame('bot')} variant="primary">
+                Обычная игра
+              </KazakhButton>
+              <KazakhButton onClick={() => startGame('openai')} variant="primary">
+                Играть с AI
+              </KazakhButton>
+              <KazakhButton onClick={() => router.push('/menu')} variant="secondary">
+                Мәзір
+              </KazakhButton>
+              <KazakhButton
+                onClick={() => {
+                  document.getElementById('rules')?.scrollIntoView({ behavior: 'smooth' })
+                }}
+                variant="secondary"
+              >
+                Ережелер
+              </KazakhButton>
+            </div>
           </motion.div>
         </div>
       </div>
