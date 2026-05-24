@@ -44,12 +44,16 @@ import { useGameLoop } from '@/lib/game/useGameLoop'
 import { Player } from '@/lib/store/types'
 import { VoiceCommand } from '@/lib/voice/speechRecognition'
 import { useTranslation } from '@/lib/i18n/useTranslation'
+import { useIsMobile } from '@/hooks/useIsMobile'
+import MobileGameHUD from '@/components/mobile/MobileGameHUD'
+import MobileTimingBar from '@/components/mobile/MobileTimingBar'
 
 // ─── 3D сцена ─────────────────────────────────────────────────────────────────
 
-function SceneContent({ onPlayerAnimDone, onBotAnimDone }: {
+function SceneContent({ onPlayerAnimDone, onBotAnimDone, isMobile }: {
   onPlayerAnimDone: () => void
   onBotAnimDone: () => void
+  isMobile: boolean
 }) {
   const { phase, playerTeam, enemyTeam, currentRunner, currentTarget, lastResult } = useGameStore()
 
@@ -84,7 +88,7 @@ function SceneContent({ onPlayerAnimDone, onBotAnimDone }: {
       <Environment preset="sunset" />
 
       <BackgroundMountains />
-      <Steppe />
+      <Steppe performanceMode={isMobile} />
       <Yurt position={[-24, -1, -29]} scale={1.18} />
       <Yurt position={[18, -1, -33]} scale={0.95} />
       <Yurt position={[-8, -1, -42]} scale={0.72} />
@@ -97,7 +101,7 @@ function SceneContent({ onPlayerAnimDone, onBotAnimDone }: {
       <FestivalDecor />
       <AmbientParticles />
       <WeatherEffects />
-      <CrowdGroup />
+      <CrowdGroup performanceMode={isMobile} />
       <Eagle />
 
       {/* Наша шеренга (синие) */}
@@ -146,11 +150,13 @@ function SceneContent({ onPlayerAnimDone, onBotAnimDone }: {
         />
       )}
 
-      <CameraRig phase={phase} />
-      <EffectComposer>
-        <Bloom intensity={0.4} luminanceThreshold={0.75} luminanceSmoothing={0.9} />
-        <Vignette darkness={0.45} offset={0.3} />
-      </EffectComposer>
+      <CameraRig phase={phase} isMobile={isMobile} />
+      {!isMobile && (
+        <EffectComposer>
+          <Bloom intensity={0.4} luminanceThreshold={0.75} luminanceSmoothing={0.9} />
+          <Vignette darkness={0.45} offset={0.3} />
+        </EffectComposer>
+      )}
     </>
   )
 }
@@ -169,6 +175,7 @@ const PHASE_LABELS: Partial<Record<string, string>> = {
 export default function GameScene() {
   const router = useRouter()
   const { t } = useTranslation()
+  const { isMobile, isTablet, width, height, orientation } = useIsMobile()
   const {
     phase, playerTeam, enemyTeam, round,
     commentaryText, isCommentaryLoading, subtitleText,
@@ -237,6 +244,16 @@ export default function GameScene() {
     setTimeout(() => store.setSubtitle(''), 900)
   }
 
+  const handleMobileTimingTap = () => {
+    if (!currentRunner || !currentTarget) return
+    if (phase === 'PLAYER_RUNS') handleAttackTimingHit(50, true)
+    if (phase === 'ENEMY_RUNS') handleDefenseTimingHit(50, true)
+  }
+
+  const pixelRatio = typeof window === 'undefined'
+    ? 1
+    : Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2)
+
   return (
     <motion.div
       className={`relative w-screen h-screen overflow-hidden ${difficulty === 'impossible' ? 'bg-red-950' : ''}`}
@@ -244,11 +261,12 @@ export default function GameScene() {
       transition={impossiblePressure || stormPressure ? { duration: 0.22, repeat: Infinity, repeatDelay: 0.28 } : undefined}
     >
       {/* Canvas */}
-      <Canvas camera={{ position: [0, 5, 14], fov: 60 }} shadows
+      <Canvas camera={{ position: [0, 5, 14], fov: isMobile ? 52 : 60 }} shadows
         style={{ width: '100vw', height: '100vh', background: '#1a0a2e' }}
-        gl={{ antialias: true, alpha: false }}>
+        dpr={pixelRatio}
+        gl={{ antialias: !isMobile, alpha: false }}>
         <Suspense fallback={null}>
-          <SceneContent onPlayerAnimDone={onPlayerAnimDone} onBotAnimDone={onBotAnimDone} />
+          <SceneContent onPlayerAnimDone={onPlayerAnimDone} onBotAnimDone={onBotAnimDone} isMobile={isMobile} />
         </Suspense>
       </Canvas>
 
@@ -286,8 +304,22 @@ export default function GameScene() {
         <VoiceNarrator />
         <CrowdAudio />
 
+        {isMobile && orientation === 'portrait' && height < 680 && (
+          <div className="absolute left-4 right-4 top-20 z-[60] rounded-lg border border-[var(--steppe-gold)]/35 bg-black/70 px-3 py-2 text-center text-xs text-white/70">
+            {t('game.rotateHint') || 'Для лучшего опыта поверните телефон горизонтально.'}
+          </div>
+        )}
+
+        {isMobile && (
+          <MobileGameHUD
+            pendingRunner={pendingRunner}
+            setPendingRunner={setPendingRunner}
+            onTargetSelect={handleEnemyTargetClick}
+          />
+        )}
+
         {/* Фаза + раунд */}
-        {phase !== 'TEAM_SELECT' && PHASE_LABELS[phase] && (
+        {!isMobile && phase !== 'TEAM_SELECT' && PHASE_LABELS[phase] && (
           <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 text-center">
             <AnimatePresence mode="wait">
               <motion.div key={phase}
@@ -303,7 +335,7 @@ export default function GameScene() {
         )}
 
         {/* Наша команда — шаг 1 при выборе */}
-        {playerTeam.players.length > 0 && (
+        {!isMobile && playerTeam.players.length > 0 && (
           <div className={phase === 'PLAYER_CHOOSES' && !pendingRunner ? 'pointer-events-auto' : ''}>
             <TeamRoster
               team={playerTeam}
@@ -315,7 +347,7 @@ export default function GameScene() {
         )}
 
         {/* Вражеская команда — шаг 2 при выборе */}
-        {enemyTeam.players.length > 0 && (
+        {!isMobile && enemyTeam.players.length > 0 && (
           <div className={phase === 'PLAYER_CHOOSES' && !!pendingRunner ? 'pointer-events-auto' : ''}>
             <EnemyRoster
               team={enemyTeam}
@@ -327,7 +359,7 @@ export default function GameScene() {
         )}
 
         {/* Субтитры */}
-        <Subtitles text={subtitleText} />
+        {!isMobile && <Subtitles text={subtitleText} />}
 
         {/* AI thinking indicator */}
         {isAiThinking && (
@@ -384,7 +416,7 @@ export default function GameScene() {
         )}
 
         {/* PLAYER_CHOOSES подсказка по шагам */}
-        {phase === 'PLAYER_CHOOSES' && (
+        {!isMobile && phase === 'PLAYER_CHOOSES' && (
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-30">
             <AnimatePresence mode="wait">
               <motion.div key={pendingRunner?.id ?? 'step1'}
@@ -433,7 +465,7 @@ export default function GameScene() {
           ← {t('game.backHome')}
         </button>
 
-        {phase !== 'TEAM_SELECT' && (
+        {!isMobile && phase !== 'TEAM_SELECT' && (
           <>
             <VoiceControls />
             <VoiceCommandButton onCommand={handleVoiceCommand} />
@@ -441,6 +473,11 @@ export default function GameScene() {
           </>
         )}
       </div>
+
+      <MobileTimingBar
+        active={isMobile && (phase === 'PLAYER_RUNS' || phase === 'ENEMY_RUNS')}
+        onTap={handleMobileTimingTap}
+      />
 
       {/* Выбор команды */}
       {phase === 'TEAM_SELECT' && <TeamSelect onSelect={startWithTeam} />}

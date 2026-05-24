@@ -25,7 +25,7 @@ function GrassBlade({ position, height, color, rotation }: {
   )
 }
 
-export default function Steppe() {
+export default function Steppe({ performanceMode = false }: { performanceMode?: boolean }) {
   const grassBlades = useMemo(() => {
     const blades: Array<{
       position: [number, number, number]
@@ -34,7 +34,8 @@ export default function Steppe() {
       rotation: number
     }> = []
 
-    for (let i = 0; i < 260; i++) {
+    const bladeCount = performanceMode ? 90 : 260
+    for (let i = 0; i < bladeCount; i++) {
       const x = (Math.random() - 0.5) * 78
       const z = (Math.random() - 0.5) * 56
       if (Math.abs(z) > 6 || Math.abs(x) > 10) {
@@ -48,7 +49,7 @@ export default function Steppe() {
     }
 
     return blades
-  }, [])
+  }, [performanceMode])
 
   return (
     <group>

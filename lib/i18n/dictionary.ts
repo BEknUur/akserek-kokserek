@@ -74,6 +74,7 @@ export const dictionary = {
       kushStat: 'Күш',
       karsylykStat: 'Қарсылық',
       statHint: 'Күш — шабуыл қуаты · Қарсылық — шептің беріктігі',
+      rotateHint: 'Жақсырақ тәжірибе үшін телефонды көлденең бұрыңыз.',
     },
     teams: {
       akserek: 'Ақсерек',
@@ -188,6 +189,7 @@ export const dictionary = {
       kushStat: 'Сила',
       karsylykStat: 'Сопротивление',
       statHint: 'Сила — мощь атаки · Сопротивление — стойкость цепи',
+      rotateHint: 'Для лучшего опыта поверните телефон горизонтально.',
     },
     teams: {
       akserek: 'Аксерек',

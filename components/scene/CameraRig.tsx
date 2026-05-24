@@ -6,6 +6,7 @@ import { GamePhase } from '@/lib/store/types'
 
 interface CameraRigProps {
   phase: GamePhase
+  isMobile?: boolean
 }
 
 const CAMERA_CONFIG: Partial<Record<GamePhase, { pos: [number, number, number]; look: [number, number, number] }>> = {
@@ -24,16 +25,26 @@ const targetPos  = new THREE.Vector3(0, 5, 14)
 const targetLook = new THREE.Vector3(0, 0, 0)
 const currentLook = new THREE.Vector3(0, 0, 0)
 
-export default function CameraRig({ phase }: CameraRigProps) {
+const MOBILE_CONFIG: Partial<Record<GamePhase, { pos: [number, number, number]; look: [number, number, number] }>> = {
+  PLAYER_CHOOSES: { pos: [0, 7, 14], look: [0, 0, 0] },
+  PLAYER_RUNS: { pos: [0, 4, 8], look: [0, 0, -2] },
+  ENEMY_RUNS: { pos: [0, 4, -8], look: [0, 0, 2] },
+  RESULT: { pos: [4, 5, 9], look: [0, 0, 0] },
+}
+
+const MOBILE_DEFAULT = { pos: [0, 7, 14] as [number, number, number], look: [0, 0, 0] as [number, number, number] }
+
+export default function CameraRig({ phase, isMobile = false }: CameraRigProps) {
   const { camera } = useThree()
 
   useFrame((state) => {
     const cfg = CAMERA_CONFIG[phase] ?? DEFAULT
+    const activeCfg = isMobile ? (MOBILE_CONFIG[phase] ?? MOBILE_DEFAULT) : cfg
     const breathing = Math.sin(state.clock.elapsedTime * 0.55) * 0.12
-    targetPos.set(...cfg.pos)
+    targetPos.set(...activeCfg.pos)
     targetPos.y += breathing
     targetPos.x += Math.sin(state.clock.elapsedTime * 0.23) * 0.08
-    targetLook.set(...cfg.look)
+    targetLook.set(...activeCfg.look)
     camera.position.lerp(targetPos, 0.05)
     currentLook.lerp(targetLook, 0.05)
     camera.lookAt(currentLook)

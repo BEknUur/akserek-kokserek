@@ -80,19 +80,19 @@ export default function Hero() {
   ]
 
   return (
-    <div className="relative min-h-screen overflow-hidden pt-24">
+    <div className="relative min-h-screen overflow-hidden pt-20 lg:pt-24">
       {/* 3D степь на фоне */}
       <div className="absolute inset-0 z-0">
         <PreviewScene />
       </div>
 
       {/* Градиенты для читаемости без перекрытия всей сцены */}
-      <div className="absolute inset-y-0 left-0 z-10 w-full bg-gradient-to-r from-[#05070d]/95 via-[#05070d]/70 to-transparent lg:w-[68%]" />
+      <div className="absolute inset-y-0 left-0 z-10 w-full bg-gradient-to-r from-[#05070d]/95 via-[#05070d]/78 to-[#05070d]/35 lg:w-[68%] lg:to-transparent" />
       <div className="absolute inset-x-0 top-0 z-10 h-44 bg-gradient-to-b from-[#05070d]/70 to-transparent" />
       <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-[#0a0e1a] to-transparent z-10" />
 
       {/* Контент */}
-      <div className="relative z-20 flex min-h-[calc(100vh-6rem)] items-end px-4 pb-24 pt-14 sm:px-8 lg:items-center lg:pb-12">
+      <div className="relative z-20 flex min-h-[calc(100vh-5rem)] items-end px-4 pb-16 pt-8 sm:px-8 lg:min-h-[calc(100vh-6rem)] lg:items-center lg:pb-12 lg:pt-14">
         <div className="max-w-xl text-left">
           <motion.div
             initial={{ opacity: 0, x: -18 }}
@@ -125,7 +125,7 @@ export default function Hero() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.7 }}
-            className="mt-6 max-w-lg text-base leading-8 text-white/78 sm:text-lg"
+            className="mt-5 max-w-lg text-sm leading-7 text-white/78 sm:text-lg lg:mt-6 lg:leading-8"
           >
             {t('landing.description')}
           </motion.p>
@@ -175,24 +175,25 @@ export default function Hero() {
             </div>
 
             <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <KazakhButton onClick={() => startGame('bot')} variant="primary">
+              <KazakhButton onClick={() => startGame('bot')} variant="primary" className="min-h-12 w-full sm:w-auto">
                 {t('landing.normalGame')}
               </KazakhButton>
-              <KazakhButton onClick={() => startGame('openai')} variant="primary">
+              <KazakhButton onClick={() => startGame('openai')} variant="primary" className="min-h-12 w-full sm:w-auto">
                 {t('landing.playWithAi')}
               </KazakhButton>
-              <KazakhButton onClick={startTournament} variant="primary">
+              <KazakhButton onClick={startTournament} variant="primary" className="min-h-12 w-full sm:w-auto">
                 {t('landing.tournament')}
               </KazakhButton>
-              <KazakhButton onClick={() => router.push('/menu')} variant="secondary">
+              <KazakhButton onClick={() => router.push('/menu')} variant="secondary" className="min-h-12 w-full sm:w-auto">
                 {t('nav.menu')}
               </KazakhButton>
               <KazakhButton
                 onClick={() => {
                   document.getElementById('rules')?.scrollIntoView({ behavior: 'smooth' })
-                }}
-                variant="secondary"
-              >
+              }}
+              variant="secondary"
+              className="min-h-12 w-full sm:w-auto"
+            >
                 {t('landing.rules')}
               </KazakhButton>
             </div>
