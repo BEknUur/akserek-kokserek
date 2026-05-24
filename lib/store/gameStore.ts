@@ -12,6 +12,9 @@ interface GameStore extends GameState {
   setSubtitle: (text: string) => void
   setAiThinking: (isThinking: boolean) => void
   setAiCommentary: (text: string) => void
+  setVoiceEnabled: (enabled: boolean) => void
+  setVolume: (volume: number) => void
+  setSpeaking: (isSpeaking: boolean) => void
   transferPlayer: (player: Player, toTeam: 'blue' | 'red') => void
   addHighlight: (event: string) => void
   resetGame: () => void
@@ -43,6 +46,9 @@ const initialState: GameState = {
   isCommentaryLoading: false,
   isAiThinking: false,
   aiCommentary: '',
+  isVoiceEnabled: true,
+  volume: 0.8,
+  isSpeaking: false,
   highlights: [],
 }
 
@@ -69,6 +75,12 @@ export const useGameStore = create<GameStore>((set) => ({
   setAiThinking: (isThinking) => set({ isAiThinking: isThinking }),
 
   setAiCommentary: (text) => set({ aiCommentary: text }),
+
+  setVoiceEnabled: (enabled) => set({ isVoiceEnabled: enabled }),
+
+  setVolume: (volume) => set({ volume: Math.min(1, Math.max(0, volume)) }),
+
+  setSpeaking: (isSpeaking) => set({ isSpeaking }),
 
   transferPlayer: (player, toTeam) =>
     set((state) => {

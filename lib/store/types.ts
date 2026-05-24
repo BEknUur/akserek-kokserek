@@ -51,5 +51,8 @@ export interface GameState {
   isCommentaryLoading: boolean
   isAiThinking: boolean
   aiCommentary: string
+  isVoiceEnabled: boolean
+  volume: number
+  isSpeaking: boolean
   highlights: string[]
 }

@@ -23,6 +23,8 @@ import Commentator from '@/components/ui/Commentator'
 import TeamSelect from '@/components/ui/TeamSelect'
 import GameOver from '@/components/ui/GameOver'
 import AiChat from '@/components/ui/AiChat'
+import VoiceControls from '@/components/ui/VoiceControls'
+import VoiceNarrator from '@/components/ui/VoiceNarrator'
 
 import { useGameStore } from '@/lib/store/gameStore'
 import { useGameLoop } from '@/lib/game/useGameLoop'
@@ -185,6 +187,7 @@ export default function GameScene() {
 
       {/* ── HUD ── */}
       <div className="absolute inset-0 pointer-events-none">
+        <VoiceNarrator />
 
         {/* Фаза + раунд */}
         {phase !== 'TEAM_SELECT' && PHASE_LABELS[phase] && (
@@ -333,7 +336,12 @@ export default function GameScene() {
           ← Басты бет
         </button>
 
-        {phase !== 'TEAM_SELECT' && phase !== 'GAME_OVER' && <AiChat />}
+        {phase !== 'TEAM_SELECT' && (
+          <>
+            <VoiceControls />
+            {phase !== 'GAME_OVER' && <AiChat />}
+          </>
+        )}
       </div>
 
       {/* Выбор команды */}
